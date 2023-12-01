@@ -4,72 +4,54 @@
 #include <thread>
 #include <atomic>
 #include <mutex>
+#include <windows.h>
 
-class SpinLock
-{
-public:
-	void lock()
-	{
-		// CAS (Compare And Swap)
-		// _locked.compare_exchange_strong (expected, desired)
-		// expected == _locked 이면 _locked = desired
-		// expected != _locked 이면 expected = _locked
-
-		// 의사 코드를 유심히 봐야함 
-		// expected != _locked 경우에만!!!! expected = _locked를 해줌
-
-		bool expected = false;
-		bool desired = true;
-
-		while (_locked.compare_exchange_strong(expected, desired) == false)
-		{
-			expected = false;
-
-			//this_thread::sleep_for(std::chrono::milliseconds(100)); // C++ 11
-			//this_thread::sleep_for(100ms); // C++ 14 
-			this_thread::yield(); // 커널에게 제어권을 넘겨줌 == this_thread::sleep_for(0ms)
-		}
-	}
-
-	void unlock()
-	{
-		_locked.store(false);
-	}
-
-private:
-	atomic<bool> _locked = false;
-};
-
-int32 sum = 0;
 mutex m;
+queue<int32> q;
+HANDLE handle;
 
-SpinLock spinLock;
-
-void Add()
+void Producer()
 {
-	for (int i = 0; i < 100'000; ++i)
+	while (true)
 	{
-		lock_guard<SpinLock> guard(spinLock);
-		sum++;
+		{
+			unique_lock<mutex> lock(m);
+			q.push(100);
+		}
+		::SetEvent(handle);
+		this_thread::sleep_for(10000ms);
 	}
 }
 
-void Sub()
+void Consumer()
 {
-	for (int i = 0; i < 100'000; ++i)
+	while (true)
 	{
-		lock_guard<SpinLock> guard(spinLock);
-		sum--;
+		::WaitForSingleObject(handle, INFINITE); // handle이 0이면 무한대기, 0이 아니면 handle이 1이 될 때까지 대기
+
+		unique_lock<mutex> lock(m);
+		if (q.empty() == false)
+		{
+			int32 data = q.front();
+			q.pop();
+			cout << data << endl;
+		}
 	}
 }
 
 int main()
 {
-	thread t1(Add);
-	thread t2(Sub);
+	// 커널 오브젝트 : 커널이 관리하는 자원
+	// UsageCount : 커널 오브젝트를 사용하는 스레드의 개수
+	// Signal : 커널 오브젝트를 사용하는 스레드가 없다면 0, 있다면 1
+	// bManualReset : true면 Signal이 1이 되면 0으로 바뀌지 않음, false면 Signal이 1이 되면 0으로 바뀜
+	handle = ::CreateEvent(NULL/*보안속성*/, FALSE/*bManualReset*/, FALSE/*bInitialState*/, NULL);
+
+	thread t1(Producer);
+	thread t2(Consumer);
 
 	t1.join();
 	t2.join();
 
-	cout << sum << endl;
+	::CloseHandle(handle);
 }
