@@ -19,7 +19,7 @@ void Producer()
 			q.push(100);
 		}
 		::SetEvent(handle);
-		this_thread::sleep_for(10000ms);
+		//this_thread::sleep_for(10000ms);
 	}
 }
 
@@ -34,7 +34,7 @@ void Consumer()
 		{
 			int32 data = q.front();
 			q.pop();
-			cout << data << endl;
+			cout << q.size() << endl;
 		}
 	}
 }
