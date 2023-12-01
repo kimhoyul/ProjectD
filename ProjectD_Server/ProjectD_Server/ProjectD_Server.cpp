@@ -4,84 +4,47 @@
 #include <thread>
 #include <atomic>
 #include <mutex>
+#include <windows.h>
 #include <future>
 
-int64 Calcualte()
-{
-	int64 sum = 0;
 
-	for (int32 i = 0; i < 1'000'000; ++i)
-	{
-		sum += i;
-	}
-
-	return sum;
-}
-
-void PromiseWorker(std::promise<string>&& promise)
-{
-	promise.set_value("Secret Message");
-}
-
-void TaskWorker(std::packaged_task<int64(void)>&& task)
-{
-	task();
-}
+int32 buffer[10000][10000];
 
 int main()
 {
-	// 동기(synchronous) 실행
-	//int64 sum = Calcualte();
-	//cout << sum << endl;
+	memset(buffer, 0, sizeof(buffer));
 
-	//std::future : 비동기(asynchronous) 실행
 	{
-		// 1) deferred : 지연된 실행
-		// 2) async : 비동기 실행
-		// 3) deferred | async : 지연된 실행 or 비동기 실행 알아서 결정
-		std::future<int64> future = std::async(std::launch::async, Calcualte);
+		uint64 start = GetTickCount64();
 
-		std::future_status status = future.wait_for(1ms); // 1ms 동안 기다린다.
-		if (status == future_status::ready) // 만약 1ms 동안 기다렸는데 결과가 나왔다면
-		{
-			int64 sum = future.get(); // 결과를 가져온다.
-		}
+		int64 sum = 0;
 
-		int64 sum = future.get(); // 결과를 가져올 때까지 기다린다.
+		for (int32 i = 0; i < 10000; ++i)
+			for (int32 j = 0; j < 10000; ++j)
+				sum += buffer[i][j];
 
-		/*class Knight
-		{
-		public:
-			int64 GetHP() { return 100;}
-		};
+		// [i][j][j][j][j][j][j]... [i][j][j][j][j][j][j]... [i][j][j][j][j][j][j]... [i][j][j][j][j][j][j]... 
+		// j가 연속적으로 증가하면서 데이터를 접근하므로 캐시철학에 맞게 캐시에 연속적으로 데이터를 올려놓는다.
+		// 연속한 데이터가 캐시에 있는지 확인하고, 캐시에 있으면 빠르게 접근할 수 있다. == 캐시 힛
 
-		Knight knight;
-		std::future<int64> future2 = std::async(std::launch::async, &Knight::GetHP, knight);*/
+		uint64 end = GetTickCount64();
+		cout << "Elapsed Time: " << end - start << "ms\n";
 	}
 
-	// std::promise : 비동기(asynchronous) 실행
 	{
-		std::promise<string> promise; // 약속 개체생성
-		std::future<string> future = promise.get_future(); // 약속 개체로부터 미래의 결과를 가져온다.
+		uint64 start = GetTickCount64();
 
-		thread t(PromiseWorker, std::move(promise)); // 다른 쓰레드에서 약속 개체기다림
+		int64 sum = 0;
 
-		string message = future.get(); // 미래의 결과로부터 결과를 가져온다.
-		cout << message << endl;
+		for (int32 i = 0; i < 10000; ++i)
+			for (int32 j = 0; j < 10000; ++j)
+				sum += buffer[j][i];
 
-		t.join();
-	}
+		// [i][j][j][j][j][j][j]... [i][j][j][j][j][j][j]... [i][j][j][j][j][j][j]... [i][j][j][j][j][j][j]... 
+		// i가 증가하면서 데이터를 접근하므로 비연속적으로 데이터를 접근한다.
+		// 연속하지 않은 데이터를 접근하므로 캐시 힛이 발생이 떨어진다.
 
-	// std::packaged_task : 비동기(asynchronous) 실행
-	{
-		std::packaged_task<int64/*걸어줄 함수의 아웃풋 타입*/(void/*걸어줄 함수의 인풋타입*/)> task(Calcualte); // 작업 개체 생성
-		std::future<int64> future = task.get_future(); // 작업 개체로부터 미래의 결과를 가져온다.
-
-		thread t(TaskWorker, std::move(task)); // 다른 쓰레드에서 작업 개체 실행
-
-		int64 sum = future.get(); // 미래의 결과로부터 결과를 가져온다.
-		cout << sum << endl;
-
-		t.join();
+		uint64 end = GetTickCount64();
+		cout << "Elapsed Time: " << end - start << "ms\n";
 	}
 }
