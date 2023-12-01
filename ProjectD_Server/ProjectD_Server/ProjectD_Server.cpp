@@ -3,38 +3,53 @@
 #include "CorePch.h"
 #include <thread>
 #include <atomic>
+#include <mutex>
 
-// atomic : 원자적 연산을 보장해주는 클래스
-// 원자적 연산 : 연산이 완전히 끝날 때까지 다른 스레드가 접근하지 못하도록 보장하는 연산
-atomic<int32> sum = 0; // global variable
+vector<int32> v;
 
-void Add()
+// mutex : mutual exclusion (상호 배제)
+mutex m;
+
+// RAII patten : Resource Acquisition Is Initialization (자원 획득은 초기화 과정에서)
+// 이 패턴의 핵심 아이디어는 객체의 생명주기를 통해 자원의 관리를 자동화하는 것
+// 즉, 객체가 생성될 때 자원을 획득(acquisition)하고, 객체가 소멸될 때 자원을 해제(release)
+// 이 패턴을 사용하면 자원을 획득한 후, 예외가 발생하더라도 자원을 해제할 수 있음
+
+template<typename T>
+class LockGuard
 {
-	for (int i = 0; i < 1'000'000; ++i)
+public:
+	LockGuard(T& m)
 	{
-		sum.fetch_add(1); // sum = sum + 1
+		_mutex = &m;
+		_mutex->lock();
 	}
-}
 
-void Sub()
-{
-	for (int i = 0; i < 1'000'000; ++i)
+	~LockGuard()
 	{
-		sum.fetch_sub(1); // sum = sum - 1
+		_mutex->unlock();
+	}
+
+private:
+	T* _mutex;
+};
+
+void push()
+{
+	for (int32 i = 0; i < 10'000; ++i)
+	{
+		std::lock_guard<std::mutex> lockGuard(m);
+		v.push_back(i);
 	}
 }
 
 int main()
 {
-	Add();
-	Sub();
-	
-	cout << sum << endl;
+	std::thread t1(push);
+	std::thread t2(push);
 
-	std::thread t1(Add);
-	std::thread t2(Sub);
 	t1.join();
 	t2.join();
 
-	cout << sum << endl;
+	cout << v.size() << endl;
 }
