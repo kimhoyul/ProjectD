@@ -4,52 +4,84 @@
 #include <thread>
 #include <atomic>
 #include <mutex>
-#include <windows.h>
+#include <future>
 
-mutex m;
-queue<int32> q;
-
-// condition_variable : 스레드가 특정 조건을 만족할 때까지 대기하고 있다가 조건이 만족되면 깨어나는 기능
-// UserLevel Object : 커널이 관리하지 않는 자원
-condition_variable cv;
-
-void Producer()
+int64 Calcualte()
 {
-	while (true)
-	{
-		{
-			unique_lock<mutex> lock(m); // 1) Lock을 걸고
-			q.push(100); // 2) 공유 변수 값을 수정
-		} // 3) Lock을 풀고
-		cv.notify_one(); // 4) 조건 변수 통해 다른 쓰레드에게 통지해 대기중인 스레드가 있다면 한개만 깨움 
+	int64 sum = 0;
 
-		//this_thread::sleep_for(10000ms);
+	for (int32 i = 0; i < 1'000'000; ++i)
+	{
+		sum += i;
 	}
+
+	return sum;
 }
 
-void Consumer()
+void PromiseWorker(std::promise<string>&& promise)
 {
-	while (true)
-	{
-		unique_lock<mutex> lock(m); // 1) Lock을 걸고
-		cv.wait(lock, []() { return q.empty() == false; }); 
-		// 2) Lock이 걸려있는지 확인후 안잡혀있으면 다시 잡고, 
-		// 조건만족 O = 확인후 만족하면 빠져 나와서 이어서 코드 진행
-		// 조건만족 X = Lock을 풀고 대기 상태로 들어감
-		
-		{
-			int32 data = q.front();
-			q.pop();
-			cout << q.size() << endl;
-		}
-	}
+	promise.set_value("Secret Message");
+}
+
+void TaskWorker(std::packaged_task<int64(void)>&& task)
+{
+	task();
 }
 
 int main()
 {
-	thread t1(Producer);
-	thread t2(Consumer);
+	// 동기(synchronous) 실행
+	//int64 sum = Calcualte();
+	//cout << sum << endl;
 
-	t1.join();
-	t2.join();
+	//std::future : 비동기(asynchronous) 실행
+	{
+		// 1) deferred : 지연된 실행
+		// 2) async : 비동기 실행
+		// 3) deferred | async : 지연된 실행 or 비동기 실행 알아서 결정
+		std::future<int64> future = std::async(std::launch::async, Calcualte);
+
+		std::future_status status = future.wait_for(1ms); // 1ms 동안 기다린다.
+		if (status == future_status::ready) // 만약 1ms 동안 기다렸는데 결과가 나왔다면
+		{
+			int64 sum = future.get(); // 결과를 가져온다.
+		}
+
+		int64 sum = future.get(); // 결과를 가져올 때까지 기다린다.
+
+		/*class Knight
+		{
+		public:
+			int64 GetHP() { return 100;}
+		};
+
+		Knight knight;
+		std::future<int64> future2 = std::async(std::launch::async, &Knight::GetHP, knight);*/
+	}
+
+	// std::promise : 비동기(asynchronous) 실행
+	{
+		std::promise<string> promise; // 약속 개체생성
+		std::future<string> future = promise.get_future(); // 약속 개체로부터 미래의 결과를 가져온다.
+
+		thread t(PromiseWorker, std::move(promise)); // 다른 쓰레드에서 약속 개체기다림
+
+		string message = future.get(); // 미래의 결과로부터 결과를 가져온다.
+		cout << message << endl;
+
+		t.join();
+	}
+
+	// std::packaged_task : 비동기(asynchronous) 실행
+	{
+		std::packaged_task<int64/*걸어줄 함수의 아웃풋 타입*/(void/*걸어줄 함수의 인풋타입*/)> task(Calcualte); // 작업 개체 생성
+		std::future<int64> future = task.get_future(); // 작업 개체로부터 미래의 결과를 가져온다.
+
+		thread t(TaskWorker, std::move(task)); // 다른 쓰레드에서 작업 개체 실행
+
+		int64 sum = future.get(); // 미래의 결과로부터 결과를 가져온다.
+		cout << sum << endl;
+
+		t.join();
+	}
 }
