@@ -7,44 +7,58 @@
 #include <windows.h>
 #include <future>
 
+// 가시성과 코드 재배치가 문제가 됨
 
-int32 buffer[10000][10000];
+// 가시성: 코어가 여러개인데, 코어마다 캐시가 있음
+// 캐시가 있으면 캐시에 복사해서 쓰는데, 캐시가 다르면 캐시에 있는 값이 다름
+
+// 코드 재배치: 컴파일러 또는 CPU가 최적화를 위해 코드를 재배치함
+// 함수를 기계어로 변환과정에서 단일스레드 기준 함수의 결과값이 같다면, 순서를 바꿔도 상관없다고 생각함
+// 컴파일러가 재배치를 하면, 내가 원하는 순서대로 실행이 안됨
+
+int32 x = 0;
+int32 y = 0;
+int32 r1 = 0;
+int32 r2 = 0;
+volatile bool ready = false;
+
+void Thread_1()
+{
+	while (ready == false) ; //wait until ready
+	y = 1; //store y
+	r1 = x; //load x
+}
+
+void Thread_2()
+{
+	while (ready == false); //wait until ready
+	x = 1; //store x
+	r2 = y; //load y
+}
 
 int main()
 {
-	memset(buffer, 0, sizeof(buffer));
+	int32 count = 0;
 
+	while (true)
 	{
-		uint64 start = GetTickCount64();
+		ready = false;
+		count++;
 
-		int64 sum = 0;
+		x = y = r1 = r2 = 0;
 
-		for (int32 i = 0; i < 10000; ++i)
-			for (int32 j = 0; j < 10000; ++j)
-				sum += buffer[i][j];
+		thread t1(Thread_1);
+		thread t2(Thread_2);
 
-		// [i][j][j][j][j][j][j]... [i][j][j][j][j][j][j]... [i][j][j][j][j][j][j]... [i][j][j][j][j][j][j]... 
-		// j가 연속적으로 증가하면서 데이터를 접근하므로 캐시철학에 맞게 캐시에 연속적으로 데이터를 올려놓는다.
-		// 연속한 데이터가 캐시에 있는지 확인하고, 캐시에 있으면 빠르게 접근할 수 있다. == 캐시 힛
+		ready = true;
 
-		uint64 end = GetTickCount64();
-		cout << "Elapsed Time: " << end - start << "ms\n";
-	}
+		t1.join();
+		t2.join();
 
-	{
-		uint64 start = GetTickCount64();
-
-		int64 sum = 0;
-
-		for (int32 i = 0; i < 10000; ++i)
-			for (int32 j = 0; j < 10000; ++j)
-				sum += buffer[j][i];
-
-		// [i][j][j][j][j][j][j]... [i][j][j][j][j][j][j]... [i][j][j][j][j][j][j]... [i][j][j][j][j][j][j]... 
-		// i가 증가하면서 데이터를 접근하므로 비연속적으로 데이터를 접근한다.
-		// 연속하지 않은 데이터를 접근하므로 캐시 힛이 발생이 떨어진다.
-
-		uint64 end = GetTickCount64();
-		cout << "Elapsed Time: " << end - start << "ms\n";
+		if (r1 == 0 && r2 == 0)
+		{
+			cout << count << "번째에서 발견" << endl;
+			break;
+		}
 	}
 }
