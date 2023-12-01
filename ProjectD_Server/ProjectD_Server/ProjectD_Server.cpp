@@ -24,6 +24,10 @@ public:
 		while (_locked.compare_exchange_strong(expected, desired) == false)
 		{
 			expected = false;
+
+			//this_thread::sleep_for(std::chrono::milliseconds(100)); // C++ 11
+			//this_thread::sleep_for(100ms); // C++ 14 
+			this_thread::yield(); // 커널에게 제어권을 넘겨줌 == this_thread::sleep_for(0ms)
 		}
 	}
 
