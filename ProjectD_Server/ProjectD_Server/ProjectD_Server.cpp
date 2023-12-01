@@ -8,17 +8,21 @@
 
 mutex m;
 queue<int32> q;
-HANDLE handle;
+
+// condition_variable : 스레드가 특정 조건을 만족할 때까지 대기하고 있다가 조건이 만족되면 깨어나는 기능
+// UserLevel Object : 커널이 관리하지 않는 자원
+condition_variable cv;
 
 void Producer()
 {
 	while (true)
 	{
 		{
-			unique_lock<mutex> lock(m);
-			q.push(100);
-		}
-		::SetEvent(handle);
+			unique_lock<mutex> lock(m); // 1) Lock을 걸고
+			q.push(100); // 2) 공유 변수 값을 수정
+		} // 3) Lock을 풀고
+		cv.notify_one(); // 4) 조건 변수 통해 다른 쓰레드에게 통지해 대기중인 스레드가 있다면 한개만 깨움 
+
 		//this_thread::sleep_for(10000ms);
 	}
 }
@@ -27,10 +31,12 @@ void Consumer()
 {
 	while (true)
 	{
-		::WaitForSingleObject(handle, INFINITE); // handle이 0이면 무한대기, 0이 아니면 handle이 1이 될 때까지 대기
-
-		unique_lock<mutex> lock(m);
-		if (q.empty() == false)
+		unique_lock<mutex> lock(m); // 1) Lock을 걸고
+		cv.wait(lock, []() { return q.empty() == false; }); 
+		// 2) Lock이 걸려있는지 확인후 안잡혀있으면 다시 잡고, 
+		// 조건만족 O = 확인후 만족하면 빠져 나와서 이어서 코드 진행
+		// 조건만족 X = Lock을 풀고 대기 상태로 들어감
+		
 		{
 			int32 data = q.front();
 			q.pop();
@@ -41,17 +47,9 @@ void Consumer()
 
 int main()
 {
-	// 커널 오브젝트 : 커널이 관리하는 자원
-	// UsageCount : 커널 오브젝트를 사용하는 스레드의 개수
-	// Signal : 커널 오브젝트를 사용하는 스레드가 없다면 0, 있다면 1
-	// bManualReset : true면 Signal이 1이 되면 0으로 바뀌지 않음, false면 Signal이 1이 되면 0으로 바뀜
-	handle = ::CreateEvent(NULL/*보안속성*/, FALSE/*bManualReset*/, FALSE/*bInitialState*/, NULL);
-
 	thread t1(Producer);
 	thread t2(Consumer);
 
 	t1.join();
 	t2.join();
-
-	::CloseHandle(handle);
 }
