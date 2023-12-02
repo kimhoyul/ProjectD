@@ -48,7 +48,7 @@ class LockFreeStack // 간지나지만 효율 개똥망인 스택 : 어렵지만 그렇다고 락 효율
 {
 	struct Node
 	{
-		Node(const T& value) : data(value)
+		Node(const T& value) : data(value), next(nullptr)
 		{
 
 		}
@@ -95,6 +95,8 @@ public:
 	// 4) 기존 _head 삭제
 	bool TryPop(T& value)
 	{
+		++_popcount; // popcount 증가
+
 		Node* oldHead = _head.load(); // 1) oldHead = _head
 		
 		// 윗줄의 코드에서 oldHead = _head.load() 하였으나 
@@ -113,16 +115,93 @@ public:
 		while (oldHead && _head.compare_exchange_weak(oldHead, oldHead->next) == false); // 2) _head = _head->next
 		
 		if (oldHead == nullptr) // oldHead가 nullptr이면
+		{
+			--_popcount; // popcount 감소
 			return false; // false 리턴
+		}
 
 		value = oldHead->data; // 3) 기존 _head data 추출 / 반환
+		TryDelete(oldHead); // 4) 기존 _head 삭제
 
-		//delete oldHead; // 4) 기존 _head 삭제
 		return true;
 	}
+
+	void TryDelete(Node* oldHead)
+	{
+		// 나 외에 누가 이 함수에 들어와 있는지?
+		if (_popcount == 1) // 나만 들어와 있으면
+		{
+			// 나만 있는게 확실하니, 삭제 예약된 다른 데이터도 삭제하자
+			Node* node = _pendingList.exchange(nullptr); 
+
+			if (--_popcount == 0) // 끼어든 애가 없다면
+			{
+				// 삭제 진행
+				DeleteNodes(node);
+			}	
+			else if (node)// 누가 끼어들었으니 다시 데이터 반환
+			{
+				ChainPendingNodeList(node);
+			}
+
+			// 내꺼 데이터 삭제
+			delete oldHead;
+		}
+		else 
+		{
+			// 누가 있네? 그럼 지금 삭제하지 않고 삭제 예약만
+			ChainPendingNode(oldHead);
+			--_popcount;
+		}
+	}
+
+	// [first][ ][ ][ ][ ][ ][last] -> [_pendingList][ ][ ][ ][ ]...
+	//   ^                         
+	// [_pendingList]              
+	void ChainPendingNodeList(Node* first, Node* last)
+	{
+		last->next = _pendingList;
+
+		while (_pendingList.compare_exchange_weak(last->next, first) == false)
+		{
+
+		}
+	}
+
+	// 위 함수를 오버로딩한 헬퍼 함수
+	void ChainPendingNodeList(Node* node)
+	{
+		Node* last = node;
+		while (last->next)
+			last = last->next;
+
+		ChainPendingNodeList(node, last);
+	}
+
+	void ChainPendingNode(Node* node)
+	{
+		ChainPendingNodeList(node, node);
+	}
+
+	static void DeleteNodes(Node* node)
+	{
+		// [node] < [next] < [next] < ...
+		//   ^  
+		//  삭제
+		while (node)
+		{
+			Node* next = node->next;
+			delete node;
+			node = next;
+		}
+	}
+
 private:
 	// [ ][ ][ ][ ][ ][ ][ ]
 	//  ^  
 	// [_head]
 	atomic<Node*> _head;
+
+	atomic<uint32> _popcount = 0;
+	atomic<Node*> _pendingList;
 };
