@@ -7,58 +7,47 @@
 #include <windows.h>
 #include <future>
 
-// 가시성과 코드 재배치가 문제가 됨
+atomic<bool> ready;
+int32 value;
 
-// 가시성: 코어가 여러개인데, 코어마다 캐시가 있음
-// 캐시가 있으면 캐시에 복사해서 쓰는데, 캐시가 다르면 캐시에 있는 값이 다름
-
-// 코드 재배치: 컴파일러 또는 CPU가 최적화를 위해 코드를 재배치함
-// 함수를 기계어로 변환과정에서 단일스레드 기준 함수의 결과값이 같다면, 순서를 바꿔도 상관없다고 생각함
-// 컴파일러가 재배치를 하면, 내가 원하는 순서대로 실행이 안됨
-
-int32 x = 0;
-int32 y = 0;
-int32 r1 = 0;
-int32 r2 = 0;
-volatile bool ready = false;
-
-void Thread_1()
+void Producer()
 {
-	while (ready == false) ; //wait until ready
-	y = 1; //store y
-	r1 = x; //load x
+	value = 10;
+
+	ready.store(true, memory_order::memory_order_release);
+	// ---------------------------- 이 아래로 코드 재배치 X
 }
 
-void Thread_2()
+void Consumer()
 {
-	while (ready == false); //wait until ready
-	x = 1; //store x
-	r2 = y; //load y
+	// ---------------------------- 이 위로 코드 재배치 X
+	while (ready.load(memory_order::memory_order_acquire) == false)
+	;
+
+	cout << "value : " << value << endl;
 }
 
 int main()
 {
-	int32 count = 0;
+	ready = false;
+	value = 0;
+	thread t1(Producer);
+	thread t2(Consumer);
+	t1.join();
+	t2.join();
 
-	while (true)
-	{
-		ready = false;
-		count++;
+	// Memory Model 
+	// 1. Sequential Consistency : seq_cst = 가장 엄격하게 동기화 = 직관적
+	// 가시성, 재배치 해결
+	
+	// 2. Acquire-Release : 
+	// release 명령 이전의 메모리 명령들이, release 명령 이후의 메모리 명령들보다 먼저 수행되지 않는다.
+	// acquire 명령 이후의 메모리 명령들이, acquire 명령 이전의 메모리 명령들보다 먼저 수행되지 않는다.
+	// 가시성 보장, 재배치 부분적 해결
+	
+	// 3. Relaxed : relaxed = 가장 느슨하게 동기화 = 직관적이지 않음
+	// 코드 재배치 멋대로, 가시성도 해결 X
 
-		x = y = r1 = r2 = 0;
-
-		thread t1(Thread_1);
-		thread t2(Thread_2);
-
-		ready = true;
-
-		t1.join();
-		t2.join();
-
-		if (r1 == 0 && r2 == 0)
-		{
-			cout << count << "번째에서 발견" << endl;
-			break;
-		}
-	}
+	// 인텔, AMD 일관성 보장 O
+	// ARM, PowerPC 일관성 보장 X
 }
