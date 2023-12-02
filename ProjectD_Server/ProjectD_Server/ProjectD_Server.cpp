@@ -7,47 +7,31 @@
 #include <windows.h>
 #include <future>
 
-atomic<bool> ready;
-int32 value;
+thread_local int32 LThreadId = 0; // thread_local : thread 별로 각각의 변수를 가질 수 있게 해줌
 
-void Producer()
+void ThreadMain(int32 threadId)
 {
-	value = 10;
+	LThreadId = threadId; // thread_local 변수에 threadId를 넣어줌
 
-	ready.store(true, memory_order::memory_order_release);
-	// ---------------------------- 이 아래로 코드 재배치 X
-}
-
-void Consumer()
-{
-	// ---------------------------- 이 위로 코드 재배치 X
-	while (ready.load(memory_order::memory_order_acquire) == false)
-	;
-
-	cout << "value : " << value << endl;
+	while (true)
+	{
+		std::cout << "Thread " << threadId << " is running" << std::endl;
+		std::this_thread::sleep_for(std::chrono::seconds(1)); // 1초 대기
+	}
 }
 
 int main()
 {
-	ready = false;
-	value = 0;
-	thread t1(Producer);
-	thread t2(Consumer);
-	t1.join();
-	t2.join();
+	vector<thread> threads;
 
-	// Memory Model 
-	// 1. Sequential Consistency : seq_cst = 가장 엄격하게 동기화 = 직관적
-	// 가시성, 재배치 해결
-	
-	// 2. Acquire-Release : 
-	// release 명령 이전의 메모리 명령들이, release 명령 이후의 메모리 명령들보다 먼저 수행되지 않는다.
-	// acquire 명령 이후의 메모리 명령들이, acquire 명령 이전의 메모리 명령들보다 먼저 수행되지 않는다.
-	// 가시성 보장, 재배치 부분적 해결
-	
-	// 3. Relaxed : relaxed = 가장 느슨하게 동기화 = 직관적이지 않음
-	// 코드 재배치 멋대로, 가시성도 해결 X
+	for (int32 i = 0; i < 10; ++i)
+	{
+		int32 threadId = i + 1;
+		threads.push_back(thread(ThreadMain, threadId));
+	}
 
-	// 인텔, AMD 일관성 보장 O
-	// ARM, PowerPC 일관성 보장 X
+	for (thread& t : threads)
+	{
+		t.join();
+	}
 }
