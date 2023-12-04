@@ -8,71 +8,41 @@
 #include <future>
 #include "ThreadManager.h"
 
-class TestLock
-{
-	USE_LOCK; // USE_LOCK 매크로를 사용하면 _lock 멤버 변수가 생성된다
+int number = 1000000;
+int a[10000001];
 
-public:
-	int32 TestRead()
-	{
-		READ_LOCK; // READ_LOCK 매크로를 사용하면 readLockGuard_0 멤버 변수가 생성된다
+void primeNumberSieve() {
 
-		if (_queue.empty())
-			return -1;
-
-		return _queue.front();
+	// 1. 배열을 생성하여 초기화한다.
+	for (int i = 2; i <= number; i++) {
+		a[i] = i;
 	}
 
-	void TestPush()
-	{
-		WRITE_LOCK; // WRITE_LOCK 매크로를 사용하면 writeLockGuard_0 멤버 변수가 생성된다
-		_queue.push(rand() % 100);
+	// 2. 2부터 시작해서 특정 수의 배수에 해당하는 수를 모두 지운다.
+	// (지울 때 자기자신은 지우지 않고, 이미 지워진 수는 건너뛴다.)
+	for (int i = 2; i <= number; i++) {
+		if (a[i] == 0) continue; // 이미 지워진 수라면 건너뛰기
+
+		// 이미 지워진 숫자가 아니라면, 그 배수부터 출발하여, 가능한 모든 숫자 지우기
+		for (int j = 2 * i; j <= number; j += i) {
+			a[j] = 0;
+		}
 	}
 
-	void TestPop()
-	{
-		WRITE_LOCK; // WRITE_LOCK 매크로를 사용하면 writeLockGuard_0 멤버 변수가 생성된다
+	int res =0;
 
-		if (_queue.empty() == false)
-			_queue.pop();
+	// 3. 2부터 시작하여 남아있는 수를 모두 출력한다.
+	for (int i = 2; i <= number; i++) {
+		if (a[i] != 0)
+		{
+			res++;
+		}
 	}
-private:
-	queue<int32> _queue;
-};
 
-TestLock testLock;
-
-void ThreadWrite()
-{
-	while (true)
-	{
-		testLock.TestPush();
-		this_thread::sleep_for(1ms);
-		testLock.TestPop();
-	}
+	printf("%d ", res);
 }
 
-void ThreadRead()
-{
-	while (true)
-	{
-		int32 value = testLock.TestRead();
-		cout << value << endl;
-		this_thread::sleep_for(1ms);
-	}
-}
-
-int main()
-{
-	for (int32 i = 0; i < 2; i++)
-	{
-		GThreadManager->Launch(ThreadWrite);
-	}
-
-	for (int32 i = 0; i < 5; i++)
-	{
-		GThreadManager->Launch(ThreadRead);
-	}
-	
-	GThreadManager->Join();
+int main(void) {
+	primeNumberSieve();
+	return 0;
 }

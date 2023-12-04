@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "Lock.h"
 #include "CoreTLS.h"
+#include "DeadLockProfiler.h"
 
 /*-------------------------------------------
 		   Reader-Writer Spin Lock
@@ -9,8 +10,11 @@
 W : Write Flag (ExclusiveLock Owner TheradId)
 R : Read Lock (SharedLock Count)
 -------------------------------------------*/
-void Lock::WriteLcok()
+void Lock::WriteLcok(const char* name)
 {
+#if _DEBUG
+	GDeadLockProfiler->PushLock(name);
+#endif
 	// 동일한 스레드가 소유하고 있다면 무조건 성공
 	const uint32 lockThreadId = (_lockFlag.load() & WRITE_THREAD_MASK) >> 16;
 	if (LThreadId == lockThreadId) // 스레드 아이디가 같다면
@@ -42,8 +46,11 @@ void Lock::WriteLcok()
 	}
 }
 
-void Lock::WriteUnlock()
+void Lock::WriteUnlock(const char* name)
 {
+#if _DEBUG
+	GDeadLockProfiler->PopLock(name);
+#endif
 	// ReadLock을 다 풀기 전에는 WriteLock을 풀 수 없다
 	if ((_lockFlag.load() & READ_COUNT_MASK) != 0) // ReadLock이 걸려있다면
 		CRASH("INVALID_UNLOCK_ORDER"); // 크래시
@@ -53,8 +60,11 @@ void Lock::WriteUnlock()
 		_lockFlag.store(EMPTY_FLAG); // 소유권을 반납한다
 }
 
-void Lock::ReadLock()
+void Lock::ReadLock(const char* name)
 {
+#if _DEBUG
+	GDeadLockProfiler->PushLock(name);
+#endif
 	// 동일한 스레드가 소유하고 있다면 무조건 성공
 	const uint32 lockThreadId = (_lockFlag.load() & WRITE_THREAD_MASK) >> 16;
 	if (LThreadId == lockThreadId) // 스레드 아이디가 같다면
@@ -82,8 +92,11 @@ void Lock::ReadLock()
 	}
 }
 
-void Lock::ReadUnlock()
+void Lock::ReadUnlock(const char* name)
 {
+#if _DEBUG
+	GDeadLockProfiler->PopLock(name);
+#endif
 	if ((_lockFlag.fetch_sub(1) & READ_COUNT_MASK) == 0) // ReadLock 카운트를 1 감소시키고, ReadLock 카운트가 0이면
 		CRASH("INVALID_UNLOCK_ORDER"); // 크래시
 }

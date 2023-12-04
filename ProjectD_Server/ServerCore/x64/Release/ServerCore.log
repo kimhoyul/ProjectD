@@ -1,3 +1,8 @@
 ﻿  pch.cpp
+  CoreGlobal.cpp
   CorePch.cpp
+  CoreTLS.cpp
+  DeadLockProfiler.cpp
+  Lock.cpp
+  ThreadManager.cpp
   ServerCore.vcxproj -> D:\Unreal\Project\ProjectD\ProjectD_Server\Libraries\Release\ServerCore.lib

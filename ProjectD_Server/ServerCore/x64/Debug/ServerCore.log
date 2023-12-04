@@ -1,8 +1,2 @@
-﻿  pch.cpp
-  CoreGlobal.cpp
-  CorePch.cpp
-  CoreTLS.cpp
-  Lock.cpp
-  ThreadManager.cpp
-  Generating Code...
+﻿  DeadLockProfiler.cpp
   ServerCore.vcxproj -> D:\Unreal\Project\ProjectD\ProjectD_Server\Libraries\Debug\ServerCore.lib
