@@ -1,2 +1,4 @@
-﻿  Memory.cpp
+﻿  Allocator.cpp
+  Memory.cpp
+  Generating Code...
   ServerCore.vcxproj -> D:\Unreal\Project\ProjectD\ProjectD_Server\Libraries\Debug\ServerCore.lib

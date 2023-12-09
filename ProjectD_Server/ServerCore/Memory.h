@@ -10,7 +10,7 @@
 template<typename Type, typename...Args>
 Type* xnew(Args&&... args)
 {
-	Type* memory = static_cast<Type*>(xalloc(sizeof(Type)));
+	Type* memory = static_cast<Type*>(Xalloc(sizeof(Type)));
 
 	new(memory)Type(forward<Args>(args)...); // placement new : Type의 생성자 호출
 
@@ -21,5 +21,5 @@ template<typename Type>
 void xdelete(Type* obj)
 {
 	obj->~Type(); // Type의 소멸자 호출
-	xrelease(obj);
+	Xrelease(obj);
 }

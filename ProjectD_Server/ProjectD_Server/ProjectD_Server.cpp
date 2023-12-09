@@ -11,7 +11,14 @@
 #include "RefCounting.h"
 #include "Memory.h"
 
-class Knight
+class Player
+{
+public:
+	Player() {}
+	~Player() {}
+};
+
+class Knight : public Player
 {
 public:
 	Knight()
@@ -29,41 +36,15 @@ public:
 		cout << "~Knight()" << endl;
 	}
 
-	/*static void* operator new(size_t size)
-	{
-		cout << "Knight new : " << size << endl;
-		void* ptr = ::malloc(size);
-		return ptr;
-	}
-
-	static void operator delete(void* ptr)
-	{
-		cout << "Knight delete" << endl;
-		::free(ptr);
-	}*/
-
 	int32 _hp = 100;
-	int32 _attack = 10;
+	int32 _mp = 10;
 };
-/* 글로벌 operator overloading은 너무 위험하고 불필요함
-// new operator overloading (Global)
-void* operator new(size_t size)
-{
-	cout << "operator new : " << size << endl;
-	void* ptr = ::malloc(size);
-	return ptr;
-}
 
-// delete operator overloading (Global)
-void operator delete(void* ptr)
-{
-	cout << "operator delete" << endl;
-	::free(ptr);
-}
-*/
 int main()
 {	
-	Knight* knight = xnew<Knight>(100);
+	Knight* knight = xnew<Knight>();
 
 	xdelete(knight);
+
+	knight->_hp = 100;
 }

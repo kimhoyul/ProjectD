@@ -21,11 +21,11 @@
  객체의 생성자와 소멸자를 명시적으로 호출는 클래스
 -------------------------------------------*/
 #ifdef _DEBUG
-#define xalloc(size) BaseAllocator::Alloc(size)
-#define xrelease(ptr) BaseAllocator::Release(ptr)
+#define Xalloc(size) StompAllocator::Alloc(size)
+#define Xrelease(ptr) StompAllocator::Release(ptr)
 #else
-#define xalloc(size) BaseAllocator::Alloc(size)
-#define xrelease(ptr) BaseAllocator::Release(ptr)
+#define Xalloc(size) BaseAllocator::Alloc(size)
+#define Xrelease(ptr) BaseAllocator::Release(ptr)
 #endif
 
 
