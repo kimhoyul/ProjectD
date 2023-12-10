@@ -1,6 +1,41 @@
 #pragma once
 #include "Allocator.h"
 
+class MemoryPool;
+
+/*-------------------------------------------
+			    MemoryManager
+
+	        메모리를 총괄 하는 클래스
+-------------------------------------------*/
+class MemoryManager
+{
+	enum 
+	{
+		// 메모리 풀의 개수
+		// ~1024까지 32단위		: 32개
+		// ~2048까지 128단위		: 8개 
+		// ~4096까지 256단위		: 8개
+		POOL_COUNT = (1024 / 32) + (1024 / 128) + (2048 / 256),
+		MAX_ALLOC_SIZE = 4096 // 메모리 풀의 최대 크기 
+		// MAX_ALLOC_SIZE 이상의 메모리는 그냥 힙할당
+	};
+
+public:
+	MemoryManager();
+	~MemoryManager();
+
+	void* Allocate(int32 size);
+	void Release(void* ptr);
+
+private:
+	vector<MemoryPool*> _pools; // 메모리 풀들 모음
+
+	// 메모리 크기에 따라 메모리 풀 탐색
+	// O(1) 시간 복잡도로 찾기 위한 테이블
+	MemoryPool* _poolTable[MAX_ALLOC_SIZE + 1]; // 0 ~ 4096 까지
+};
+
 /*-------------------------------------------
 					Memory
 

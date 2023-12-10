@@ -27,6 +27,18 @@ public:
 };
 
 /*-------------------------------------------
+			    PoolAllocator
+
+		메모리 풀에 사용할 할당자 클래스
+-------------------------------------------*/
+class PoolAllocator
+{
+public:
+	static void* Alloc(int32 size);
+	static void Release(void* ptr);
+};
+
+/*-------------------------------------------
 				STLAllocator
 
         STL 컨테이너에 사용할 할당자 클래스

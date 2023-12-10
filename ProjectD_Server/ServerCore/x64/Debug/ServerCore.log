@@ -1,12 +1,4 @@
-﻿  pch.cpp
-  Allocator.cpp
-  CoreGlobal.cpp
-  CorePch.cpp
-  CoreTLS.cpp
-  DeadLockProfiler.cpp
-  Lock.cpp
-  Memory.cpp
-  RefCounting.cpp
+﻿  Allocator.cpp
   ThreadManager.cpp
   Generating Code...
   ServerCore.vcxproj -> D:\Unreal\Project\ProjectD\ProjectD_Server\Libraries\Debug\ServerCore.lib

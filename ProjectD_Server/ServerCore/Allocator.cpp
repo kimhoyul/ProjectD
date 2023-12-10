@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "Allocator.h"
+#include "Memory.h"
 
 /*-------------------------------------------
 				BaseAllocator
@@ -34,4 +35,19 @@ void StompAllocator::Release(void* ptr)
 	const int64 address = reinterpret_cast<int64>(ptr);
 	const int64 baseAddress = address - (address % PAGE_SIZE);
 	::VirtualFree(reinterpret_cast<void*>(baseAddress), 0, MEM_RELEASE);
+}
+
+/*-------------------------------------------
+				PoolAllocator
+
+		메모리 풀에 사용할 할당자 클래스
+-------------------------------------------*/
+void* PoolAllocator::Alloc(int32 size)
+{
+	return GMemoryManager->Allocate(size);
+}
+
+void PoolAllocator::Release(void* ptr)
+{
+	GMemoryManager->Release(ptr);
 }
