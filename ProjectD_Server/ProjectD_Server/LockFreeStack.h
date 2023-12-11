@@ -1,14 +1,13 @@
 #pragma once
 
 /*-------------------------------------------
-				   1차 시도
+				   2차 시도
 
 -------------------------------------------*/
 struct SListEntry
 {
 	SListEntry* next;
 };
-
 
 struct SListHeader
 {
