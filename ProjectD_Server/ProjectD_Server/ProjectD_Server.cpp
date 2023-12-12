@@ -13,25 +13,61 @@
 #include "Allocator.h"
 #include "LockFreeStack.h"
 
-
+DECLSPEC_ALIGN(16)
 class Data// : public SListEntry
 {
 public:
 	SListEntry* _entry;
-
-	int32 _hp;
-	int32 _mp;
+	int64 _rand = rand() % 1000;
 };
+
+SListHeader* Gheader;
 
 int main()
 {	
-	SListHeader header;
-	InitializeHead(&header);
+	Gheader = new SListHeader();
+	ASSERT_CRASH(((uint64)Gheader % 16) == 0); // 16바이트 정렬이 되어있는지 확인
 
-	Data* data = new Data();
-	data->_hp = 10;
-	data->_mp = 20;
-	PushEntrySList(&header, (SListEntry*)data);
+	InitializeHead(Gheader);
 
-	Data* popData = (Data*)PopEntrySList(&header);
+	for (int32 i = 0; i < 3; ++i)
+	{
+		GThreadManager->Launch([]()
+			{
+				while (true)
+				{
+					Data* data = new Data();
+					ASSERT_CRASH(((uint64)data % 16) == 0);
+
+					PushEntrySList(Gheader, (SListEntry*)data);
+					this_thread::sleep_for(10ms);
+				}
+			}
+		);
+	}
+
+	for (int32 i = 0; i < 2; ++i)
+	{
+		GThreadManager->Launch([]()
+			{
+				while (true)
+				{
+					Data* pop = nullptr;
+					pop = (Data*)PopEntrySList(Gheader);
+					
+					if (pop)
+					{
+						cout << pop->_rand << endl;
+						delete pop;
+					}
+					else
+					{
+						cout << "empty" << endl;
+					}
+				}
+			}
+		);
+	}
+
+	GThreadManager->Join();
 }
