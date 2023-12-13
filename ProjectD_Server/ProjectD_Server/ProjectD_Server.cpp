@@ -11,59 +11,29 @@
 #include "RefCounting.h"
 #include "Memory.h"
 #include "Allocator.h"
-#include "LockFreeStack.h"
 
-DECLSPEC_ALIGN(16)
-class Data// : public SListEntry
+class Knight
 {
 public:
-	SListEntry* _entry;
-	int64 _rand = rand() % 1000;
-};
+	int32 _hp = rand() % 100;
 
-SListHeader* Gheader;
+};
 
 int main()
 {	
-	Gheader = new SListHeader();
-	ASSERT_CRASH(((uint64)Gheader % 16) == 0); // 16바이트 정렬이 되어있는지 확인
-
-	InitializeHead(Gheader);
-
-	for (int32 i = 0; i < 3; ++i)
-	{
-		GThreadManager->Launch([]()
-			{
-				while (true)
-				{
-					Data* data = new Data();
-					ASSERT_CRASH(((uint64)data % 16) == 0);
-
-					PushEntrySList(Gheader, (SListEntry*)data);
-					this_thread::sleep_for(10ms);
-				}
-			}
-		);
-	}
-
 	for (int32 i = 0; i < 2; ++i)
 	{
 		GThreadManager->Launch([]()
 			{
 				while (true)
 				{
-					Data* pop = nullptr;
-					pop = (Data*)PopEntrySList(Gheader);
-					
-					if (pop)
-					{
-						cout << pop->_rand << endl;
-						delete pop;
-					}
-					else
-					{
-						cout << "empty" << endl;
-					}
+					Knight* knight = xnew<Knight>();
+
+					cout << knight->_hp << endl;
+
+					this_thread::sleep_for(10ms);
+
+					xdelete(knight);
 				}
 			}
 		);

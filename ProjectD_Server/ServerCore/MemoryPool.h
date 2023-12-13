@@ -1,6 +1,9 @@
 #pragma once
 
-
+enum
+{
+	SLIST_ALIGNMENT = 16
+};
 
 /*-------------------------------------------
 			     MemoryHeader
@@ -8,7 +11,8 @@
               [MemoryHeader][Data]
          메모리 헤더를 붙여서 메모리를 할당
 -------------------------------------------*/
-struct MemoryHeader
+DECLSPEC_ALIGN(SLIST_ALIGNMENT)
+struct MemoryHeader : public SLIST_ENTRY
 {
 	MemoryHeader(int32 size) : allocSize(size) {}
 
@@ -34,6 +38,7 @@ struct MemoryHeader
   [32byte][64byte][128byte][256byte][ ... ]
    동일한 크기의 데이터 끼리 모아주는 메모리 풀
 -------------------------------------------*/
+DECLSPEC_ALIGN(SLIST_ALIGNMENT)
 class MemoryPool
 {
 public:
@@ -44,10 +49,8 @@ public:
 	MemoryHeader* Pop(); // 메모리 풀에서 메모리를 꺼내옴
 
 private:
+	SLIST_HEADER _header; // 메모리 풀의 헤더
 	int32 _allocSize = 0; // 어떠한 크기의 메모리 풀 인지
 	atomic<int32> _allocCount = 0; // 몇개의 메모리가 할당되었는지
-
-	USE_LOCK;
-	queue<MemoryHeader*> _queue;
 };
 
