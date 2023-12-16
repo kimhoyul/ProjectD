@@ -25,7 +25,8 @@ void MemoryPool::Push(MemoryHeader* ptr)
 
 	::InterlockedPushEntrySList(&_header, static_cast<PSLIST_ENTRY>(ptr)); // _header에 메모리 반납
 
-	_allocCount.fetch_sub(1); // 할당된 메모리 개수를 1 감소시킨다.
+	_useCount.fetch_sub(1); // 할당된 메모리 개수를 1 감소시킨다.
+	_reserveCount.fetch_add(1); // 반납된 메모리 개수를 1 증가시킨다.
 
 }
 
@@ -40,9 +41,10 @@ MemoryHeader* MemoryPool::Pop()
 	else
 	{
 		ASSERT_CRASH(memory->allocSize == 0); // 있다면 가져오고, 가져온 데이터 allocSize가 0이 아니면 크래시
+		_reserveCount.fetch_sub(1); // 반납된 메모리 개수를 1 감소시킨다.
 	}
 
-	_allocCount.fetch_add(1); // 할당된 메모리 개수를 1 증가시킨다.
+	_useCount.fetch_add(1); // 할당된 메모리 개수를 1 증가시킨다.
 
 	return memory;
 }

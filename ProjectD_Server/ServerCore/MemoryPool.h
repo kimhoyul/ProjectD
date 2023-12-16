@@ -51,6 +51,7 @@ public:
 private:
 	SLIST_HEADER _header; // 메모리 풀의 헤더
 	int32 _allocSize = 0; // 어떠한 크기의 메모리 풀 인지
-	atomic<int32> _allocCount = 0; // 몇개의 메모리가 할당되었는지
+	atomic<int32> _useCount = 0; // 몇개의 메모리가 할당되었는지
+	atomic<int32> _reserveCount = 0; // 몇개의 메모리가 남아있는지
 };
 

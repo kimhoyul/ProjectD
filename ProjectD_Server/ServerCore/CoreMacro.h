@@ -15,21 +15,6 @@
 #define WRITE_LOCK				WRITE_LOCK_IDX(0);
 
 /*-------------------------------------------
-				   Memory
-
-  BaseAllocator 를 사용하여 할당 및 해제 할떄
- 객체의 생성자와 소멸자를 명시적으로 호출는 클래스
--------------------------------------------*/
-#ifdef _DEBUG
-#define Xalloc(size) PoolAllocator::Alloc(size)
-#define Xrelease(ptr) PoolAllocator::Release(ptr)
-#else
-#define Xalloc(size) BaseAllocator::Alloc(size)
-#define Xrelease(ptr) BaseAllocator::Release(ptr)
-#endif
-
-
-/*-------------------------------------------
 			       CRASH
 
 	   인위적인 크래시를 발생시키는 매크로
