@@ -56,11 +56,11 @@ template<typename Type>
 void xdelete(Type* obj)
 {
 	obj->~Type(); // Type의 소멸자 호출
-	PoolAllocator:Release(obj);
+	PoolAllocator::Release(obj);
 }
 
 template<typename Type>
 shared_ptr<Type> MakeShared()
 {
-	return shared_ptr<Type>{ xnew<Type>(), xdelete<Type>() };
+	return shared_ptr<Type>{ xnew<Type>(), xdelete<Type> };
 }

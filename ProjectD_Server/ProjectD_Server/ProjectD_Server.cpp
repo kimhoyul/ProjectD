@@ -12,35 +12,102 @@
 #include "Memory.h"
 #include "Allocator.h"
 
-class Knight
+using TL = TypeList<class Player, class Mage, class Knight, class Archer>;
+
+class Player
 {
 public:
-	int32 _hp = rand() % 100;
+	Player()
+	{
+		INIT_TL(Player);
+	}
+
+	virtual ~Player() {}
+
+	DECLARE_TL
+};
+
+class Knight : public Player
+{
+public:
+	Knight() { INIT_TL(Knight); }
 
 };
 
-class Monster
+class Mage : public Player
 {
-public: 
-	int64 _id = 0;
+public:
+	Mage() { INIT_TL(Mage); }
+
+};
+
+class Archer : public Player
+{
+public:
+	Archer() { INIT_TL(Archer); }
+
+};
+
+class Dog
+{
+
 };
 
 int main()
 {	
-	Knight* knights[100];
+	//TypeList<Mage, Knight>::Head whoAMI;							// Mage
+	////        ^      ^   
+	////       Head   Tail
+	//TypeList<Mage, Knight>::Tail whoAMI2;							// Knight
+	////        ^      ^   
+	////       Head   Tail
+	//TypeList<Mage, TypeList<Knight, Archer>>::Head whoAMI3;			// Mage
+	////        ^      ^        ^         ^
+	////       Head   Tail  Tail::Head  Tail::Tail
+	//TypeList<Mage, TypeList<Knight, Archer>>::Tail::Head whoAMI4;	// Knight
+	////        ^      ^        ^         ^
+	////       Head   Tail  Tail::Head  Tail::Tail
+	//TypeList<Mage, TypeList<Knight, Archer>>::Tail::Tail whoAMI5;	// Archer
+	////        ^      ^        ^         ^
+	////       Head   Tail  Tail::Head  Tail::Tail
 
-	for (int i = 0; i < 100; ++i)
-		knights[i] = ObjectPool<Knight>::Pop();
+	//int32 len1 = Length<TypeList<Mage, Knight>>::value;				// 2
+	//int32 len2 = Length<TypeList<Mage, Knight, Archer>>::value;		// 3
 
-	for (int i = 0; i < 100; ++i)
-	{
-		ObjectPool<Knight>::Push(knights[i]);
-		knights[i] = nullptr;
-	}
+	//using TL = TypeList<Player, Mage, Knight, Archer>;
+	//TypeAt<TL, 0>::Result whoAMI6;	
+	//TypeAt<TL, 1>::Result whoAMI7;	
+	//TypeAt<TL, 2>::Result whoAMI8;	
+
+	//IndexOf<TL, Mage>::value;
+	//IndexOf<TL, Knight>::value;
+	//IndexOf<TL, Dog>::value;
+	//
+	//bool canConvert1 = Conversion<Knight, Player>::exists; 
+	//bool canConvert2 = Conversion<Player, Knight>::exists; 
+	//bool canConvert3 = Conversion<Knight, Mage>::exists;   
+	//bool canConvert4 = Conversion<Dog, Player>::exists;   
+	
+	{ // 생포인터 예시
+		Player* player = new Knight();
+
+		// C# 의 is 와 같은 기능
+		bool canCast = CanCast<Knight*>(player);
 		
+		// C# 의 as 와 같은 기능
+		Knight* knight = TypeCast<Knight*>(player);
 
-	shared_ptr<Knight> sptr = ObjectPool<Knight>::MakeShared();
-	shared_ptr<Knight> sptr = MakeShared<Knight>();
+		delete player;
+	}
+
+
+	{ // 스마트 포인터 예시
+		shared_ptr<Player> player = MakeShared<Knight>();
+
+		shared_ptr<Archer> archer = TypeCast<Archer>(player);
+
+		bool canCast = CanCast<Mage>(player);
+	}
 
 	for (int32 i = 0; i < 2; ++i)
 	{
@@ -48,13 +115,7 @@ int main()
 			{
 				while (true)
 				{
-					Knight* knight = xnew<Knight>();
-
-					cout << knight->_hp << endl;
-
-					this_thread::sleep_for(10ms);
-
-					xdelete(knight);
+					
 				}
 			}
 		);
