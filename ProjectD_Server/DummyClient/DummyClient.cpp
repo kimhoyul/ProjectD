@@ -8,26 +8,14 @@
 
 int main()
 {
-	// 윈속 초기화(ws2_32.dll을 초기화)
-	// 관련 정보가 wsaData에 저장됨
 	WSAData wsaData;
-	
-	// 성공하면 0을 반환
-	// WSAStartup을 성공적으로 호출한 후에만 추가 Windows 소켓 함수를 실행할 수 있음
 	if (::WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)
 	{
 		return 0;
 		cout << "WSAStartup failed" << endl;
 	}
 	
-	// 소켓 생성
-	// 성공하면 소켓 핸들을 반환
-	SOCKET clientSocket = ::socket
-		(
-			AF_INET,		// 주소 체계 (Address Family : IPv4)
-			SOCK_STREAM,	// 통신 방식 (Type : SOCK_STREAM - TCP)
-			0				// 프로토콜 (protocal : 0 - Auto)
-		);
+	SOCKET clientSocket = ::socket(AF_INET,	SOCK_STREAM, 0);
 	if (clientSocket == INVALID_SOCKET)
 	{
 		int32 errCode = ::WSAGetLastError();
@@ -35,36 +23,58 @@ int main()
 		return 0;
 	}
 
-	SOCKADDR_IN serverAddr; // 서버 주소 IPv4
-	::memset(&serverAddr, 0, sizeof(serverAddr)); // 0으로 초기화
-	serverAddr.sin_family = AF_INET; // IPv4
-	inet_pton(AF_INET, "127.0.0.1", &serverAddr.sin_addr); // IP 주소 (신식)
-	// little endian / big endian 이슈 때문에 htons를 사용
-	serverAddr.sin_port = ::htons(7777); // Port 번호 (Host To Network Short)
+	SOCKADDR_IN serverAddr; 
+	::memset(&serverAddr, 0, sizeof(serverAddr)); 
+	serverAddr.sin_family = AF_INET; 
+	inet_pton(AF_INET, "127.0.0.1", &serverAddr.sin_addr); 
+	serverAddr.sin_port = ::htons(7777); 
 
-	// 서버에 접속
 	if (::connect(clientSocket, (SOCKADDR*)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR)
 	{
 		int32 errCode = ::WSAGetLastError();
 		cout << "connect failed : " << errCode << endl;
 		return 0;
 	}
+	 
+	// ------------------------------------
+	// 연결 성공!
 
-	// --------------------------------
-	// 연결 성공 !
 	cout << "connect success" << endl;
 
 	while (true)
 	{
-		//TODO: 서버로부터 데이터를 받는다.
+		char sendBuffer[100] = "Hello World!";
+
+		for (int32 i = 0; i < 10; ++i)
+		{
+			int32 resultCode = ::send(clientSocket, sendBuffer, sizeof(sendBuffer), 0);
+			if (resultCode == SOCKET_ERROR)
+			{
+				int32 errCode = ::WSAGetLastError();
+				cout << "send failed : " << errCode << endl;
+				return 0;
+			}
+		}
+
+		cout << "send success Data Len : " << sizeof(sendBuffer) << endl;
+
+		/*char recvBuffer[1000];
+		int32 recvLen = ::recv(clientSocket, recvBuffer, sizeof(recvBuffer), 0);
+		if (recvLen <= 0)
+		{
+			int32 errCode = ::WSAGetLastError();
+			cout << "recv failed : " << errCode << endl;
+			return 0;
+		}
+
+		cout << "recv success Data : " << recvBuffer << endl;
+		cout << "size : " << recvLen << endl;*/
 
 		this_thread::sleep_for(1s);
 	}
-	// --------------------------------
 
-	// 소켓 닫기
+	// ------------------------------------
+
 	::closesocket(clientSocket);
-
-	// 윈속 종료
 	::WSACleanup();
 }
