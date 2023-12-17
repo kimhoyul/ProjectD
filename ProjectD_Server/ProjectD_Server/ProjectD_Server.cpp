@@ -8,118 +8,87 @@
 #include <future>
 #include "ThreadManager.h"
 
-#include "RefCounting.h"
-#include "Memory.h"
-#include "Allocator.h"
-
-using TL = TypeList<class Player, class Mage, class Knight, class Archer>;
-
-class Player
-{
-public:
-	Player()
-	{
-		INIT_TL(Player);
-	}
-
-	virtual ~Player() {}
-
-	DECLARE_TL
-};
-
-class Knight : public Player
-{
-public:
-	Knight() { INIT_TL(Knight); }
-
-};
-
-class Mage : public Player
-{
-public:
-	Mage() { INIT_TL(Mage); }
-
-};
-
-class Archer : public Player
-{
-public:
-	Archer() { INIT_TL(Archer); }
-
-};
-
-class Dog
-{
-
-};
+#include <WinSock2.h> // for socket
+#include <MSWSock.h> // for AcceptEx
+#include <ws2tcpip.h> // for inet_ntop
+#pragma comment(lib, "ws2_32.lib") // Winsock Library
 
 int main()
 {	
-	//TypeList<Mage, Knight>::Head whoAMI;							// Mage
-	////        ^      ^   
-	////       Head   Tail
-	//TypeList<Mage, Knight>::Tail whoAMI2;							// Knight
-	////        ^      ^   
-	////       Head   Tail
-	//TypeList<Mage, TypeList<Knight, Archer>>::Head whoAMI3;			// Mage
-	////        ^      ^        ^         ^
-	////       Head   Tail  Tail::Head  Tail::Tail
-	//TypeList<Mage, TypeList<Knight, Archer>>::Tail::Head whoAMI4;	// Knight
-	////        ^      ^        ^         ^
-	////       Head   Tail  Tail::Head  Tail::Tail
-	//TypeList<Mage, TypeList<Knight, Archer>>::Tail::Tail whoAMI5;	// Archer
-	////        ^      ^        ^         ^
-	////       Head   Tail  Tail::Head  Tail::Tail
+	// 윈속 초기화(ws2_32.dll을 초기화)
+	// 관련 정보가 wsaData에 저장됨
+	WSAData wsaData;
 
-	//int32 len1 = Length<TypeList<Mage, Knight>>::value;				// 2
-	//int32 len2 = Length<TypeList<Mage, Knight, Archer>>::value;		// 3
-
-	//using TL = TypeList<Player, Mage, Knight, Archer>;
-	//TypeAt<TL, 0>::Result whoAMI6;	
-	//TypeAt<TL, 1>::Result whoAMI7;	
-	//TypeAt<TL, 2>::Result whoAMI8;	
-
-	//IndexOf<TL, Mage>::value;
-	//IndexOf<TL, Knight>::value;
-	//IndexOf<TL, Dog>::value;
-	//
-	//bool canConvert1 = Conversion<Knight, Player>::exists; 
-	//bool canConvert2 = Conversion<Player, Knight>::exists; 
-	//bool canConvert3 = Conversion<Knight, Mage>::exists;   
-	//bool canConvert4 = Conversion<Dog, Player>::exists;   
-	
-	{ // 생포인터 예시
-		Player* player = new Knight();
-
-		// C# 의 is 와 같은 기능
-		bool canCast = CanCast<Knight*>(player);
-		
-		// C# 의 as 와 같은 기능
-		Knight* knight = TypeCast<Knight*>(player);
-
-		delete player;
-	}
-
-
-	{ // 스마트 포인터 예시
-		shared_ptr<Player> player = MakeShared<Knight>();
-
-		shared_ptr<Archer> archer = TypeCast<Archer>(player);
-
-		bool canCast = CanCast<Mage>(player);
-	}
-
-	for (int32 i = 0; i < 2; ++i)
+	// 성공하면 0을 반환
+	// WSAStartup을 성공적으로 호출한 후에만 추가 Windows 소켓 함수를 실행할 수 있음
+	if (::WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)
 	{
-		GThreadManager->Launch([]()
-			{
-				while (true)
-				{
-					
-				}
-			}
-		);
+		return 0;
+		cout << "WSAStartup failed" << endl;
 	}
 
-	GThreadManager->Join();
+	// 소켓 생성
+	// 성공하면 소켓 핸들을 반환
+	SOCKET listenSocket = ::socket
+	(
+		AF_INET,		// 주소 체계 (Address Family : IPv4)
+		SOCK_STREAM,	// 통신 방식 (Type : SOCK_STREAM - TCP)
+		0				// 프로토콜 (protocal : 0 - Auto)
+	);
+	if (listenSocket == INVALID_SOCKET)
+	{
+		int32 errCode = ::WSAGetLastError();
+		cout << "socket failed : " << errCode << endl;
+		return 0;
+	}
+
+	SOCKADDR_IN serverAddr; // 서버 주소 IPv4
+	::memset(&serverAddr, 0, sizeof(serverAddr)); // 0으로 초기화
+	serverAddr.sin_family = AF_INET; // IPv4
+	serverAddr.sin_addr.s_addr = ::htonl(INADDR_ANY); // IP 주소 (Host To Network Long)
+	serverAddr.sin_port = ::htons(7777); // Port 번호 (Host To Network Short)
+
+	// 소켓에 주소 정보를 할당
+	if (::bind(listenSocket, (SOCKADDR*)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR)
+	{
+		int32 errCode = ::WSAGetLastError();
+		cout << "bind failed : " << errCode << endl;
+		return 0;
+	}
+
+	// 소켓을 연결 요청 받을 수 있는 상태로 변경
+	if (::listen(listenSocket, 10) == SOCKET_ERROR)
+	{
+		int32 errCode = ::WSAGetLastError();
+		cout << "listen failed : " << errCode << endl;
+		return 0;
+	}
+	
+	// --------------------------------
+	// 연결 대기 상태
+	while (true)
+	{
+		SOCKADDR_IN clientAddr;
+		::memset(&clientAddr, 0, sizeof(clientAddr));
+		int32 addrLen = sizeof(clientAddr);
+
+		SOCKET clientSocket = ::accept(listenSocket, (SOCKADDR*)&clientAddr, &addrLen);
+		if (clientSocket == INVALID_SOCKET)
+		{
+			int32 errCode = ::WSAGetLastError();
+			cout << "accept failed : " << errCode << endl;
+			return 0;
+		}
+
+		char ipAddress[16];
+		::inet_ntop(AF_INET, &clientAddr.sin_addr, ipAddress, sizeof(ipAddress));
+		cout << "client connected! IP : " << ipAddress << endl;
+
+		// TODO
+	}
+
+	// --------------------------------
+
+	// 윈속 종료
+	::WSACleanup();
 }
