@@ -25,10 +25,18 @@ int main()
 	if (::WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)
 		return 0;
 
-	SOCKET serverSocket = ::socket(AF_INET,	SOCK_DGRAM, 0);
-	if (serverSocket == INVALID_SOCKET)
+	SOCKET listenSocket = ::socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	if (listenSocket == INVALID_SOCKET)
 	{
-		HandleError("Socket failed");
+		HandleError("socket()");
+		return 0;
+	}
+
+	u_long on = 1;
+	// set non-blocking
+	if (::ioctlsocket(listenSocket, FIONBIO, &on) == INVALID_SOCKET)
+	{
+		HandleError("ioctlsocket()");
 		return 0;
 	}
 
@@ -38,44 +46,76 @@ int main()
 	serverAddr.sin_addr.s_addr = ::htonl(INADDR_ANY);
 	serverAddr.sin_port = ::htons(7777);
 
-	if (::bind(serverSocket, (SOCKADDR*)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR)
+	if (::bind(listenSocket, (SOCKADDR*)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR)
 	{
-		HandleError("Bind failed");
+		HandleError("bind()");
+		return 0;
+	}
+	
+	if (::listen(listenSocket, SOMAXCONN) == SOCKET_ERROR)
+	{
+		HandleError("listen()");
 		return 0;
 	}
 
+	cout << "Accepting..." << endl;
+
+	SOCKADDR_IN clientAddr;
+	int32 addrLen = sizeof(clientAddr);
+
 	while (true)
 	{
-		SOCKADDR_IN clientAddr;
-		::memset(&clientAddr, 0, sizeof(clientAddr));
-		int32 addrLen = sizeof(clientAddr);
-
-		this_thread::sleep_for(1s);
-
-		char recvBuffer[1000];
-
-		int32 recvLen = ::recvfrom(serverSocket, recvBuffer, sizeof(recvBuffer), 0, 
-			(SOCKADDR*)&clientAddr, &addrLen);
-
-		if (recvLen <= 0)
+		SOCKET clientSocket = ::accept(listenSocket, (SOCKADDR*)&clientAddr, &addrLen);
+		if (clientSocket == INVALID_SOCKET)
 		{
-			HandleError("Recvfrom failed");
-			return 0;
+			// 원래 블록했어야 했지만 논블록으로 바꿔서 INVALID_SOCKET 빠질 수 있음
+			if (::WSAGetLastError() == WSAEWOULDBLOCK)
+				continue;
+
+			HandleError("accept()");
+			break;
 		}
 
-		cout << "Recv Data : " << recvBuffer << endl;
-		cout << "Recv Data Len : " << recvLen << endl;
+		cout << "Client Connected" << endl;
 
-		int32 errCode = ::sendto(serverSocket, recvBuffer, recvLen, 0,
-			(SOCKADDR*)&clientAddr, sizeof(clientAddr));
-
-		if (errCode == SOCKET_ERROR)
+		while (true)
 		{
-			HandleError("SendTo failed");
-			return 0;
-		}
+			char recvBuffer[1000];
+			int32 recvLen = ::recv(clientSocket, recvBuffer, sizeof(recvBuffer), 0);
+			if (recvLen == SOCKET_ERROR)
+			{
+				// 원래 블록했어야 했지만 논블록으로 바꿔서 SOCKET_ERROR 빠질 수 있음
+				if (::WSAGetLastError() == WSAEWOULDBLOCK)
+					continue;
 
-		cout << "Send Data Len : " << recvLen << endl;
+				HandleError("recv()");
+				break;
+			}
+			else if (recvLen == 0)
+			{
+				cout << "Client Disconnected" << endl;
+				break;
+			}
+
+			cout << "Recv Data Len : " << recvLen << " | Recv Data : "  << recvBuffer << endl;
+
+			while (true)
+			{
+				int32 sendLen = ::send(clientSocket, recvBuffer, recvLen, 0);
+				if (sendLen == SOCKET_ERROR)
+				{
+					// 원래 블록했어야 했지만 논블록으로 바꿔서 SOCKET_ERROR 빠질 수 있음
+					if (::WSAGetLastError() == WSAEWOULDBLOCK)
+						continue;
+
+					HandleError("send()");
+					break;
+				}
+				
+				cout << "Send Data Len : " << sendLen << " | Send Data : " << recvBuffer << endl;
+				break;
+			}
+		}
 	}
 
 	::WSACleanup();

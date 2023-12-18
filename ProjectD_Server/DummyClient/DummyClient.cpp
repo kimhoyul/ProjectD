@@ -18,68 +18,88 @@ int main()
 	if (::WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)
 		return 0;
 	
-	SOCKET clientSocket = ::socket(AF_INET, SOCK_DGRAM, 0);
+	SOCKET clientSocket = ::socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	if (clientSocket == INVALID_SOCKET)
 	{
-		HandleError("Socket failed");
+		HandleError("socket()");
 		return 0;
 	}
 
-	SOCKADDR_IN serverAddr; 
-	::memset(&serverAddr, 0, sizeof(serverAddr)); 
-	serverAddr.sin_family = AF_INET; 
+	u_long on = 1;
+	// set non-blocking
+	if (::ioctlsocket(clientSocket, FIONBIO, &on) == INVALID_SOCKET)
+	{
+		HandleError("ioctlsocket()");
+		return 0;
+	}
+
+	SOCKADDR_IN serverAddr;
+	::memset(&serverAddr, 0, sizeof(serverAddr));
+	serverAddr.sin_family = AF_INET;
 	::inet_pton(AF_INET, "127.0.0.1", &serverAddr.sin_addr);
-	serverAddr.sin_port = ::htons(7777); 
-		 
-	// Connected UDP
-	::connect(clientSocket, (SOCKADDR*)&serverAddr, sizeof(serverAddr));
-		 
-	// ------------------------------------
+	serverAddr.sin_port = ::htons(7777);
 
 	while (true)
 	{
-		char sendBuffer[100] = "Hello World!";
-
-		// Unconnected UDP
-		/*int32 errCode = ::sendto(clientSocket, sendBuffer, sizeof(sendBuffer), 0,
-			(SOCKADDR*)&serverAddr, sizeof(serverAddr));*/
-
-		// Connected UDP
-		int32 errCode = ::send(clientSocket, sendBuffer, sizeof(sendBuffer), 0);
-
-		if (errCode == SOCKET_ERROR)
+		if (::connect(clientSocket, (SOCKADDR*)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR)
 		{
-			HandleError("SendTo failed");
-			return 0;
+			if (::WSAGetLastError() == WSAEWOULDBLOCK)
+				continue;
+			
+			// 이미 연결된 상태라면 break;
+			if (::WSAGetLastError() == WSAEISCONN)
+				break;
+
+			HandleError("connect()");
+			break;
+		}
+	}
+
+	cout << "Connected!" << endl;
+
+	char sendBuffer[100] = "Hello World!";
+
+	while (true)
+	{
+		if (::send(clientSocket, sendBuffer, sizeof(sendBuffer), 0) == SOCKET_ERROR)
+		{
+			// 원래 블록했어야 했지만 논블록으로 바꿔서 SOCKET_ERROR 빠질 수 있음
+			if (::WSAGetLastError() == WSAEWOULDBLOCK)
+				continue;
+
+			HandleError("send()");
+			break;
 		}
 
-		cout << "send success Data Len : " << sizeof(sendBuffer) << endl;
+		cout << "Send Data Len : " << sizeof(sendBuffer) << " | Send Data : " << sendBuffer << endl;
 
-		SOCKADDR_IN recvAddr;
-		::memset(&recvAddr, 0, sizeof(recvAddr));
-		int32 addrLen = sizeof(recvAddr);
-
-		char recvBuffer[1000];
-
-		// Unconnected UDP
-		/*int32 recvLen = ::recvfrom(clientSocket, recvBuffer, sizeof(recvBuffer), 0,
-			(SOCKADDR*)&recvAddr, &addrLen);*/
-
-		// Connected UDP
-		int32 recvLen = ::recv(clientSocket, recvBuffer, sizeof(recvBuffer), 0);
-		if (recvLen <= 0)
+		while (true)
 		{
-			HandleError("Recvfrom failed");
-			return 0;
-		}
+			char recvBuffer[1000];
+			int32 recvLen = ::recv(clientSocket, recvBuffer, sizeof(recvBuffer), 0);
+			if (recvLen == SOCKET_ERROR)
+			{
+				// 원래 블록했어야 했지만 논블록으로 바꿔서 SOCKET_ERROR 빠질 수 있음
+				if (::WSAGetLastError() == WSAEWOULDBLOCK)
+					continue;
 
-		cout << "Recv Data : " << recvBuffer << endl;
-		cout << "Recv Data Len : " << recvLen << endl;
+				HandleError("recv()");
+				break;
+			}
+			else if (recvLen == 0)
+			{
+				cout << "Server Disconnected" << endl;
+				break;
+			}
+
+			cout << "Recv Data Len : " << recvLen << " | Recv Data : " << recvBuffer << endl;
+			break;
+		}
 
 		this_thread::sleep_for(1s);
 	}
 
-	// ------------------------------------
+	
 
 	::closesocket(clientSocket);
 	::WSACleanup();
