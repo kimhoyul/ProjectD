@@ -177,20 +177,57 @@ int main()
 		if (networkEvents.lNetworkEvents & FD_READ || networkEvents.lNetworkEvents & FD_WRITE)
 		{
 			// FD_READ 에러가 있는지 확인
-			if (networkEvents.iErrorCode[FD_READ] != 0)
+			if (networkEvents.iErrorCode[FD_READ] && networkEvents.iErrorCode[FD_READ_BIT] != 0)
 			{
 				HandleError("FD_READ_BIT");
-				return 0;
+				continue;
 			}
 
 			// FD_WRITE 에러가 있는지 확인
-			if (networkEvents.iErrorCode[FD_READ] != 0)
+			if (networkEvents.iErrorCode[FD_WRITE] && networkEvents.iErrorCode[FD_WRITE_BIT] != 0)
+			{ 
+				HandleError("FD_WRITE_BIT");
+				continue;
+			}
+			
+			Session& s = sessions[index];
+
+			// Read
+			if (s.recvBytes == 0)
 			{
-				HandleError("FD_READ_BIT");
-				return 0;
+				int32 recvLen = ::recv(s.socket, s.recvBuffer, BUFFER_SIZE, 0);
+				if (recvLen == SOCKET_ERROR && ::WSAGetLastError() != WSAEWOULDBLOCK)
+				{
+					continue;
+				}
+
+				s.recvBytes = recvLen;
+				cout << "Recv Data Len : " << recvLen << " | Recv Data : " << s.recvBuffer << endl;
 			}
 
+			// Write
+			if (s.recvBytes > s.sendBytes)
+			{
+				int32 sendLen = ::send(s.socket, &s.recvBuffer[s.sendBytes], s.recvBytes - s.sendBytes, 0);
+				if (sendLen == SOCKET_ERROR && ::WSAGetLastError() != WSAEWOULDBLOCK)
+				{
+					continue;
+				}
 
+				s.sendBytes += sendLen;
+				if (s.recvBytes == s.sendBytes)
+				{
+					s.recvBytes = 0;
+					s.sendBytes = 0;
+				}
+				cout << "Send Data Len : " << sendLen << " | Send Data : " << s.recvBuffer << endl;
+			}
+		}
+
+		// FD_CLOSE 처리
+		if (networkEvents.lNetworkEvents & FD_CLOSE)
+		{
+			// TODO : Remove socket
 		}
 
 
