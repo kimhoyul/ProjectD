@@ -128,7 +128,72 @@ int main()
 
 	while (true)
 	{
-		::WSAWaitForMultipleEvents(wsaEvents.size(), &wsaEvents[0], FALSE, WSA_INFINITE, FALSE);
+		int32 index = ::WSAWaitForMultipleEvents(wsaEvents.size(), &wsaEvents[0], FALSE, WSA_INFINITE, FALSE);
+		if (index == WSA_WAIT_FAILED)
+			continue;
+
+		index -= WSA_WAIT_EVENT_0;
+
+		// WSAEnumNetworkEvents 에서 아래 함수와 동일한 기능을 수행함
+		//::WSAResetEvent(wsaEvents[index]);
+
+		WSANETWORKEVENTS networkEvents;
+		if (::WSAEnumNetworkEvents(sessions[index].socket, wsaEvents[index], &networkEvents) == SOCKET_ERROR)
+		{
+			HandleError("WSAEnumNetworkEvents()");
+			return 0;
+		}
+
+		// Listner 소켓 체크
+		// 엑셉트 신호인지, 클로즈 신호인지 확인
+		if (networkEvents.lNetworkEvents & FD_ACCEPT) // 비트 플래그 체크
+		{
+			// 엑셉트 신호에 에러가 있는지 확인
+			if (networkEvents.iErrorCode[FD_ACCEPT_BIT] != 0)
+			{
+				HandleError("FD_ACCEPT_BIT");
+				return 0;
+			}
+
+			SOCKADDR_IN clientAddr;
+			int32 addrLen = sizeof(clientAddr);
+			SOCKET clientSocket = ::accept(listenSocket, (SOCKADDR*)&clientAddr, &addrLen);
+			if (clientSocket != INVALID_SOCKET)
+			{
+				cout << "Client Connected!" << endl;
+
+				WSAEVENT clientEvent = ::WSACreateEvent();
+				wsaEvents.push_back(clientEvent);
+				sessions.push_back(Session{ clientSocket });
+				if (::WSAEventSelect(clientSocket, clientEvent, FD_READ | FD_WRITE | FD_CLOSE) == SOCKET_ERROR)
+				{
+					HandleError("WSAEventSelect()");
+					return 0;
+				}
+			}
+		}
+
+		// Client Session 소켓 체크
+		if (networkEvents.lNetworkEvents & FD_READ || networkEvents.lNetworkEvents & FD_WRITE)
+		{
+			// FD_READ 에러가 있는지 확인
+			if (networkEvents.iErrorCode[FD_READ] != 0)
+			{
+				HandleError("FD_READ_BIT");
+				return 0;
+			}
+
+			// FD_WRITE 에러가 있는지 확인
+			if (networkEvents.iErrorCode[FD_READ] != 0)
+			{
+				HandleError("FD_READ_BIT");
+				return 0;
+			}
+
+
+		}
+
+
 	}
 
 	// 윈속 종료
