@@ -70,7 +70,7 @@ int main()
 	{
 		WSABUF wsaBuf;
 		wsaBuf.buf = sendBuffer;
-		wsaBuf.len = sizeof(sendBuffer);
+		wsaBuf.len = 100;
 
 		DWORD sendLen = 0;
 		DWORD flags = 0;
