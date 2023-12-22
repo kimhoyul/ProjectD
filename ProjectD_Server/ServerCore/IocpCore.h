@@ -36,3 +36,5 @@ private:
 	HANDLE _iocpHandle;
 };
 
+// TEMP
+extern IocpCore GIocpCore;

@@ -2,6 +2,9 @@
 #include "IocpCore.h"
 #include "IocpEvent.h"
 
+// TEMP
+IocpCore GIocpCore;
+
 /*-------------------------------------------
 				  IocpCore
 
@@ -30,7 +33,23 @@ bool IocpCore::Dispatch(uint32 timeoutMs)
 	IocpObject* iocpObject = nullptr;
 	IocpEvent* iocpEvent = nullptr;
 
-	::GetQueuedCompletionStatus(_iocpHandle, OUT &numOfBytes, OUT reinterpret_cast<PULONG_PTR>(&iocpObject), OUT reinterpret_cast<LPOVERLAPPED*>(&iocpEvent), timeoutMs);
+	if (::GetQueuedCompletionStatus(_iocpHandle, OUT &numOfBytes, OUT reinterpret_cast<PULONG_PTR>(&iocpObject), OUT reinterpret_cast<LPOVERLAPPED*>(&iocpEvent), timeoutMs))
+	{
+		iocpObject->Dispatch(iocpEvent, numOfBytes);
+	}
+	else
+	{
+		int32 errCode = ::GetLastError();
+		switch (errCode)
+		{
+		case WAIT_TIMEOUT:
+			return false;
+		default:
+			// TODO : ·Î±× Âï±â
+			iocpObject->Dispatch(iocpEvent, numOfBytes);
+			break;
+		}
+	}
 
-	return false;
+	return true;
 }

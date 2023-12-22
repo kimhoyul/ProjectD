@@ -7,7 +7,7 @@
 	OVERLAPPED 사용하는 객체들의 부모 클래스
 -------------------------------------------*/
 
-IocpEvent::IocpEvent(EventType eventType)
+IocpEvent::IocpEvent(EventType type) : _type(type)
 {
 	Init();
 }
