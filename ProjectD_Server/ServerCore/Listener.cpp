@@ -3,6 +3,7 @@
 #include "SocketUtils.h"
 #include "IocpEvent.h"
 #include "Session.h"
+#include "Service.h"
 
 /*-------------------------------------------
 				  Listener
@@ -21,13 +22,17 @@ Listener::~Listener()
 	}
 }
 
-bool Listener::StartAccept(NetAddress nerAddress)
+bool Listener::StartAccept(ServerServiceRef service)
 {
+	_service = service;
+	if (_service == nullptr)
+		return false;
+
 	_socket = SocketUtils::CreateSocket();
 	if (_socket == INVALID_SOCKET)
 		return false;
 
-	if (GIocpCore.Register(this) == false)
+	if (_service->GetIocpCore()->Register(shared_from_this()) == false)
 		return false;
 
 	if (SocketUtils::SetReuseAddress(_socket, true) == false)
@@ -36,13 +41,13 @@ bool Listener::StartAccept(NetAddress nerAddress)
 	if (SocketUtils::SetLinger(_socket, 0 ,0) == false)
 		return false;
 
-	if (SocketUtils::Bind(_socket, nerAddress) == false)
+	if (SocketUtils::Bind(_socket, _service->GetNetAddress()) == false)
 		return false;
 
 	if (SocketUtils::Listen(_socket) == false)
 		return false;
 
-	const int32 accpetCount = 1;
+	const int32 accpetCount = _service->GetMaxSessionCount();
 	for (int32 i = 0; i < accpetCount; i++)
 	{
 		AcceptEvent* acceptEvent = xnew<AcceptEvent>();
@@ -51,7 +56,7 @@ bool Listener::StartAccept(NetAddress nerAddress)
 		RegisterAccept(acceptEvent);
 	}
 
-	return false;
+	return true;
 }
 
 void Listener::CloseSocket()
@@ -74,7 +79,7 @@ void Listener::Dispatch(IocpEvent* iocpEvent, int32 numOfBytes)
 
 void Listener::RegisterAccept(AcceptEvent* acceptEvent)
 {
-	SessionRef session = MakeShared<Session>();
+	SessionRef session = _service->CreateSession();
 	acceptEvent->Init();
 	acceptEvent->session = session;
 

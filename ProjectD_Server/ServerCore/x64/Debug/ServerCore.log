@@ -1,5 +1,2 @@
-﻿  IocpCore.cpp
-  Listener.cpp
-  Session.cpp
-  Generating Code...
-  ServerCore.vcxproj -> E:\UE\ProjectD\ProjectD_Server\Libraries\Debug\ServerCore.lib
+﻿  Service.cpp
+  ServerCore.vcxproj -> D:\Unreal\Project\ProjectD\ProjectD_Server\Libraries\Debug\ServerCore.lib

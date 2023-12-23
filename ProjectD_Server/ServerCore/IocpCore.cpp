@@ -2,9 +2,6 @@
 #include "IocpCore.h"
 #include "IocpEvent.h"
 
-// TEMP
-IocpCore GIocpCore;
-
 /*-------------------------------------------
 				  IocpCore
 
@@ -22,7 +19,7 @@ IocpCore::~IocpCore()
 	::CloseHandle(_iocpHandle);
 }
 
-bool IocpCore::Register(IocpObject* iocpObject)
+bool IocpCore::Register(IocpObjectRef iocpObject)
 {
 	return ::CreateIoCompletionPort(iocpObject->GetHandle(), _iocpHandle, 0, 0);
 }

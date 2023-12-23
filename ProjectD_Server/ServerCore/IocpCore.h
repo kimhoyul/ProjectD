@@ -28,13 +28,10 @@ public:
 	HANDLE GetHandle() { return _iocpHandle; }
 
 	// 관찰 대상 소켓 등록 함수
-	bool Register(class IocpObject* iocpObject);
+	bool Register(IocpObjectRef iocpObject);
 	// Worker Thread 가 일감이 있는지 확인 하는 함수
 	bool Dispatch(uint32 timeoutMs = INFINITE);
 
 private:
 	HANDLE _iocpHandle;
 };
-
-// TEMP
-extern IocpCore GIocpCore;
