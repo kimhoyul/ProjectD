@@ -115,10 +115,7 @@ void Listener::ProcessAccept(AcceptEvent* acceptEvent)
 	}
 
 	session->SetNetAddress(NetAddress(sockAddress));
-
-	wcout << "Client Connected! : " << session->GetAddress().GetIpAdress() << " " << session->GetAddress().GetPort() << endl;
-
-	// TODO
+	session->ProcessConnect();
 
 	RegisterAccept(acceptEvent);
 }
