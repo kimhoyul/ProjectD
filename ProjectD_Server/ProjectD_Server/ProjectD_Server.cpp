@@ -12,7 +12,20 @@
 
 class GameSession : public Session
 {
+public:
+	virtual int32 OnRecv(BYTE* buuter, int32 len) override
+	{
+		// echo
+		cout << "On Recv Len = " << len << endl;
+		Send(buuter, len);
+	
+		return len;
+	}
 
+	virtual void OnSend(int32 len) override
+	{
+		cout << "On Send Len = " << len << endl;
+	}
 };
 
 int main()

@@ -74,4 +74,7 @@ class SendEvent : public IocpEvent
 {
 public:
 	SendEvent() : IocpEvent(EventType::Send) { }
+
+	// TEMP : 임시 샌드 버퍼
+	vector<BYTE> buffer;
 };
