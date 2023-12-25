@@ -2,6 +2,7 @@
 #include "IocpCore.h"
 #include "IocpEvent.h"
 #include "NetAddress.h"
+#include "RecvBuffer.h"
 
 class Service;
 
@@ -16,6 +17,11 @@ class Session : public IocpObject
 	friend class IocpCore;
 	friend class Service;
 
+	enum
+	{
+		BUFFER_SIZE = 0x10000, //64KB
+	};
+
 public:
 	Session();
 	virtual ~Session();
@@ -23,6 +29,7 @@ public:
 public:
 	/* 외부에서 사용하는 함수 */
 	void Send(BYTE* buffer, int32 len);
+	bool Connect();
 	void Disconnect(const WCHAR* cause);
 
 	shared_ptr<Service> GetService() { return _service.lock(); }
@@ -43,28 +50,24 @@ private:
 
 private:
 	/* 전송 관련 */
-	void RegisterConnect();
+	bool RegisterConnect();
+	bool RegisterDisconnect();
 	void RegisterRecv();
 	void RegisterSend(SendEvent* sendEvent);
 
 	void ProcessConnect();
+	void ProcessDisconnect();
 	void ProcessRecv(int32 numOfBytes);
 	void ProcessSend(SendEvent* sendEvent, int32 numOfBytes);
 
 	void HandleError(int32 errorCode);
 
 protected:
-	/* 콘텐츠 코드에서 오버로딩해서 사용할 함수 */
+	/* 콘텐츠 코드에서 재정의해서 사용할 함수 */
 	virtual void OnConnected() {}
 	virtual int32 OnRecv(BYTE* buffer, int32 len) { return len; }
 	virtual void OnSend(int32 len) {}
 	virtual void OnDisconnected() {}
-
-public:
-	// TEMP
-	BYTE _recvBuffer[1000];
-
-	
 
 private:
 	weak_ptr<Service> _service;
@@ -76,12 +79,16 @@ private:
 	USE_LOCK;
 
 	/* 수신 관련 */
+	RecvBuffer _recvBuffer;
 	
 	/* 송신 관련 */
 
 private:  
 	/* IocpEvenet 재사용을 하기위한 멤버 변수 */
-	RecvEvent _recvEvent;
+	ConnectEvent	_connectEvent;
+	DisconnectEvent	_disconnectEvent;
+	RecvEvent		_recvEvent;
+
 
 };
 

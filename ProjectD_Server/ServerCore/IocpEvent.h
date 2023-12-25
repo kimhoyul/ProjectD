@@ -5,6 +5,7 @@ class Session;
 enum class EventType : uint8
 {
 	Connect,
+	Disconnect,
 	Accept,
 	//PreRecv, // 0byte recv : Recv를 하기 전에 미리 RecvBuf를 채워놓는다.
 	Recv,
@@ -39,6 +40,16 @@ public:
 	ConnectEvent() : IocpEvent(EventType::Connect) { }
 };
 
+/*-------------------------------------------
+				DisconnectEvent
+
+			각 타입별 이벤트 클래스
+-------------------------------------------*/
+class DisconnectEvent : public IocpEvent
+{
+public:
+	DisconnectEvent() : IocpEvent(EventType::Disconnect) { }
+};
 
 /*-------------------------------------------
 				  AcceptEvent
