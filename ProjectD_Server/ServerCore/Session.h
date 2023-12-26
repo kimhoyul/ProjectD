@@ -28,7 +28,7 @@ public:
 
 public:
 	/* 외부에서 사용하는 함수 */
-	void Send(BYTE* buffer, int32 len);
+	void Send(SendBufferRef sendbuffer);
 	bool Connect();
 	void Disconnect(const WCHAR* cause);
 
@@ -54,11 +54,12 @@ private:
 	bool RegisterDisconnect();
 	void RegisterRecv();
 	void RegisterSend(SendEvent* sendEvent);
+	void RegisterSend();
 
 	void ProcessConnect();
 	void ProcessDisconnect();
 	void ProcessRecv(int32 numOfBytes);
-	void ProcessSend(SendEvent* sendEvent, int32 numOfBytes);
+	void ProcessSend(int32 numOfBytes);
 
 	void HandleError(int32 errorCode);
 
@@ -82,12 +83,17 @@ private:
 	RecvBuffer _recvBuffer;
 	
 	/* 송신 관련 */
+	// RegisterSend가 실행중이어서 내가 당장 WSASend를 할수 없을때 저장해둘 큐
+	Queue<SendBufferRef> _sendQueue;
+	// RegisterSend가 실행중인지 여부를 판단하는 변수
+	Atomic<bool> _sendRegister = false;
 
 private:  
 	/* IocpEvenet 재사용을 하기위한 멤버 변수 */
 	ConnectEvent	_connectEvent;
 	DisconnectEvent	_disconnectEvent;
 	RecvEvent		_recvEvent;
+	SendEvent		_sendEvent;
 
 
 };

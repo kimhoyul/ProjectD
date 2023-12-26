@@ -18,20 +18,15 @@ Session::~Session()
 	SocketUtils::Close(_socket);
 }
 
-void Session::Send(BYTE* buffer, int32 len)
+void Session::Send(SendBufferRef sendbuffer)
 {
-	// 생각할 문제
-	// 1) 버퍼 관리
-	// 2) sendEvent 를 단일로 할지 여러개로 할지, WSASend 중첩해서 호출할 수 있을지?
-
-	// TEMP : 실시간으로 만드는 방식
-	SendEvent* sendEvent = xnew<SendEvent>();
-	sendEvent->owner = shared_from_this(); // add ref
-	sendEvent->buffer.resize(len);
-	::memcpy(sendEvent->buffer.data(), buffer, len);
-
+	// 현재 RegisterSend가 걸리지 않은 상태라면, 걸어준다.
 	WRITE_LOCK;
-	RegisterSend(sendEvent);
+
+	_sendQueue.push(sendbuffer);
+
+	if (_sendRegister.exchange(true) == false)
+		RegisterSend();
 
 }
 
@@ -159,7 +154,7 @@ void Session::RegisterRecv()
 	}
 }
 
-void Session::RegisterSend(SendEvent* sendEvent)
+void Session::RegisterSend()
 {
 	if (IsConnected() == false)
 		return;
@@ -236,7 +231,7 @@ void Session::ProcessRecv(int32 numOfBytes)
 	RegisterRecv();
 }
 
-void Session::ProcessSend(SendEvent* sendEvent, int32 numOfBytes)
+void Session::ProcessSend(int32 numOfBytes)
 {
 	// 이벤트를 소모 했으므로 레퍼런스를 해제
 	sendEvent->owner = nullptr; // RELEASE_REF

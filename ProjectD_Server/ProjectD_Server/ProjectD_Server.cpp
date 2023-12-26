@@ -11,11 +11,15 @@ public:
 		cout << "~GameSession" << endl;
 	}
 
-	virtual int32 OnRecv(BYTE* buuter, int32 len) override
+	virtual int32 OnRecv(BYTE* buffer, int32 len) override
 	{
 		// echo
 		cout << "On Recv Len = " << len << endl;
-		Send(buuter, len);
+
+		SendBufferRef sendBuffer = MakeShared<SendBuffer>(4096);
+		sendBuffer->CopyData(buffer, len);
+
+		Send(sendBuffer);
 	
 		return len;
 	}
