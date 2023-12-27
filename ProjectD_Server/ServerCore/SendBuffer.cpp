@@ -10,12 +10,10 @@
 SendBuffer::SendBuffer(int32 bufferSize)
 {
 	_buffer.resize(bufferSize);
-
 }
 
 SendBuffer::~SendBuffer()
 {
-	
 }
 
 void SendBuffer::CopyData(void* data, int32 len)

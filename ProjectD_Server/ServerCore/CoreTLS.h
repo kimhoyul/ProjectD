@@ -1,3 +1,5 @@
 #pragma once
+#include <stack>
 
-extern thread_local uint32 LThreadId; // 직접적으로 관리할 쓰레드 ID
+extern thread_local uint32	LThreadId;
+extern thread_local std::stack<int32> LLockStack;

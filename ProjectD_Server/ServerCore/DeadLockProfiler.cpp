@@ -25,10 +25,10 @@ void DeadLockProfiler::PushLock(const char* name)
 	}
 
 	// 잡고 있는 락이 있었다면
-	if (_lockStack.empty() == false)
+	if (LLockStack.empty() == false)
 	{
 		// 기존에 발견되지 않은 간선 이라면 데드락 여부 다시 확인
-		const int32 prevId = _lockStack.top(); // 직전에 잡은 락의 아이디를 가져온다
+		const int32 prevId = LLockStack.top(); // 직전에 잡은 락의 아이디를 가져온다
 		if (lockId != prevId) // 직전에 잡은 락과 지금 잡은 락이 다르다면
 		{
 			set<int32>& history = _lockHisotry[prevId]; // 이전에 잡은 락의 히스토리를 가져온다
@@ -41,21 +41,21 @@ void DeadLockProfiler::PushLock(const char* name)
 		}
 	}
 	
-	_lockStack.push(lockId); // 락을 잡는다
+	LLockStack.push(lockId); // 락을 잡는다
 }
 
 void DeadLockProfiler::PopLock(const char* name)
 {
 	LockGuard guard(_lock);
 
-	if (_lockStack.empty()) // 락을 잡지 않았다면
+	if (LLockStack.empty()) // 락을 잡지 않았다면
 		CRASH("MULTIPLE_UNLOCK_CRASH"); // 언락 크래시
 
 	int32 lockId = _nameToId[name]; // 이름을 기준으로 아이디를 찾는다
-	if (_lockStack.top() != lockId) // 지금 풀려고 하는 락	의 아이디와 직전에 잡은 락의 아이디가 다르다면
+	if (LLockStack.top() != lockId) // 지금 풀려고 하는 락	의 아이디와 직전에 잡은 락의 아이디가 다르다면
 		CRASH("INVALID_UNLOCK_ORDER"); // 언락 크래시
 
-	_lockStack.pop();
+	LLockStack.pop();
 }
 
 void DeadLockProfiler::CheckCycle()
