@@ -3,7 +3,6 @@
   CoreGlobal.cpp
   CorePch.cpp
   CoreTLS.cpp
-E:\UE\ProjectD\ProjectD_Server\ServerCore\CoreTLS.cpp(1,1): warning C4828: 파일에 0xba 오프셋에서 시작하는 문자가 포함되어 있습니다. 이 문자는 현재 원본 문자 집합에서 잘못된 문자입니다(코드 페이지 949).
   DeadLockProfiler.cpp
   IocpCore.cpp
   IocpEvent.cpp
@@ -20,4 +19,4 @@ E:\UE\ProjectD\ProjectD_Server\ServerCore\CoreTLS.cpp(1,1): warning C4828: 파�
   SocketUtils.cpp
   ThreadManager.cpp
   코드를 생성하고 있습니다...
-  ServerCore.vcxproj -> E:\UE\ProjectD\ProjectD_Server\Libraries\Debug\ServerCore.lib
+  ServerCore.vcxproj -> D:\Unreal\Project\ProjectD\ProjectD_Server\Libraries\Debug\ServerCore.lib

@@ -7,28 +7,86 @@
 
 -------------------------------------------*/
 
-SendBuffer::SendBuffer(int32 bufferSize)
+SendBuffer::SendBuffer(SendBufferChunkRef owner, BYTE* buffer, int32 allocSize)
+	: _owner(owner), _buffer(buffer), _allocSize(allocSize)
 {
-	_buffer.resize(bufferSize);
 }
 
 SendBuffer::~SendBuffer()
 {
 }
 
-void SendBuffer::CopyData(void* data, int32 len)
+void SendBuffer::Close(uint32 writeSize)
 {
-	ASSERT_CRASH(Capacity() >= len);
-	::memcpy(_buffer.data(), data, len);
-	_writeSize = len;
+	ASSERT_CRASH(_allocSize >= writeSize);
+	_writeSize = writeSize;
+	_owner->Close(writeSize);
 }
 
-// 큰 덩이리에서 사용할 크기 만큼 뜯어 가는 함수
-SendBufferRef SendBufferManager::Open(int32 size)
-{
-	
+/*-------------------------------------------
+			   SendBufferChunk
 
-	return SendBufferRef();
+	버퍼들을 큰 덩어리로 할당 받고 쪼개서
+	 사용 할 수 있도록 관리 하는 클래스
+-------------------------------------------*/
+SendBufferChunk::SendBufferChunk()
+{
+}
+
+SendBufferChunk::~SendBufferChunk()
+{
+}
+
+void SendBufferChunk::Reset()
+{
+	_open = false;
+	_usedSize = 0;
+}
+
+SendBufferRef SendBufferChunk::Open(uint32 allocSize)
+{
+	ASSERT_CRASH(allocSize <= SEND_BUFFER_CHUNK_SIZE);
+	ASSERT_CRASH(_open == false);
+
+	if (allocSize > FreeSize())
+		return nullptr;
+
+	_open = true;
+	return ObjectPool<SendBuffer>::MakeShared(shared_from_this(), Buffer(), allocSize);
+}
+
+void SendBufferChunk::Close(uint32 writeSize)
+{
+	ASSERT_CRASH(_open == true);
+	_open = false;
+	_usedSize += writeSize;
+}
+
+/*-------------------------------------------
+			  SendBufferManager
+
+ 샌드버퍼를 전역으로 사용하기위한 관리 클래스
+-------------------------------------------*/
+SendBufferRef SendBufferManager::Open(uint32 size)
+{
+	if (LSendBufferChunk == nullptr)
+	{
+		LSendBufferChunk = Pop(); // 전역 샌드버퍼에서 가져옴
+		LSendBufferChunk->Reset();
+	}
+
+	ASSERT_CRASH(LSendBufferChunk->IsOpen() == false);
+
+	// 다 썻으면 버리고 새거로 교체
+	if (LSendBufferChunk->FreeSize() < size)
+	{
+		LSendBufferChunk = Pop();
+		LSendBufferChunk->Reset();
+	}
+
+	cout << "FREE : " << LSendBufferChunk->FreeSize() << endl;
+
+	return LSendBufferChunk->Open(size);
 }
 
 SendBufferChunkRef SendBufferManager::Pop()
@@ -54,5 +112,5 @@ void SendBufferManager::Push(SendBufferChunkRef buffer)
 
 void SendBufferManager::PushGlobal(SendBufferChunk* buffer)
 {
-	
+	GSendBufferManager->Push(SendBufferChunkRef(buffer, PushGlobal));
 }
