@@ -28,7 +28,7 @@ public:
 
 public:
 	/* 외부에서 사용하는 함수 */
-	void Send(SendBufferRef sendbuffer);
+	void Send(SendBufferRef sendBuffer);
 	bool Connect();
 	void Disconnect(const WCHAR* cause);
 
@@ -37,7 +37,7 @@ public:
 
 public:
 	/* 정보 관련 */
-	void SetNetAddress(const NetAddress address) { _netAddress = address; }
+	void SetNetAddress(NetAddress address) { _netAddress = address; }
 	NetAddress GetAddress() { return _netAddress; }
 	SOCKET GetSocket() { return _socket; }
 	bool IsConnected() { return _connected; }
@@ -85,7 +85,7 @@ private:
 	// RegisterSend가 실행중이어서 내가 당장 WSASend를 할수 없을때 저장해둘 큐
 	Queue<SendBufferRef> _sendQueue;
 	// RegisterSend가 실행중인지 여부를 판단하는 변수
-	Atomic<bool> _sendRegister = false;
+	Atomic<bool> _sendRegistered = false;
 
 private:  
 	/* IocpEvenet 재사용을 하기위한 멤버 변수 */
@@ -93,7 +93,30 @@ private:
 	DisconnectEvent	_disconnectEvent;
 	RecvEvent		_recvEvent;
 	SendEvent		_sendEvent;
-
-
 };
 
+/*-------------------------------------------
+				 PacketSession
+
+ 수신받은 데이터의 구분을 위해 사용할 패킷
+ [size(2)][id(2)][data.....][size(2)][id(2)][data.....]
+-------------------------------------------*/
+struct PacketHeader
+{
+	uint16 size;
+	uint16 id; // 프로토콜ID (ex. 1= 로그인, 2= 이동요청)
+};
+ 
+class PacketSession : public Session
+{
+public:
+	PacketSession();
+	virtual ~PacketSession();
+
+	PacketSessionRef GetPacketSessionRef() { return static_pointer_cast<PacketSession>(shared_from_this()); }
+
+protected:
+	virtual int32 OnRecv(BYTE* buffer, int32 len) sealed;
+	virtual int32 OnRecvPacket(BYTE* buffer, int32 len) abstract;
+
+};
