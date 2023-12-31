@@ -1,5 +1,30 @@
-﻿  ProjectD_Server.cpp
+﻿  GameSession.cpp
+D:\Unreal\Project\ProjectD\ProjectD_Server\ProjectD_Server\ServerPacketHandler.h(111,51): warning C4244: '=': 'uint64'에서 'uint16'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+D:\Unreal\Project\ProjectD\ProjectD_Server\ProjectD_Server\ServerPacketHandler.h(119,59): warning C4244: '=': 'uint64'에서 'uint16'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+D:\Unreal\Project\ProjectD\ProjectD_Server\ServerCore\BufferWriter.h(43,21): warning C4267: '+=': 'size_t'에서 'uint32'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+D:\Unreal\Project\ProjectD\ProjectD_Server\ProjectD_Server\ServerPacketHandler.h(98,13): message : 컴파일되는 함수 템플릿 인스턴스화 'T *BufferWriter::Reserve<PKT_S_TEST>(uint64)'에 대한 참조를 확인하세요.
+          with
+          [
+              T=PKT_S_TEST
+          ]
+  ProjectD_Server.cpp
+D:\Unreal\Project\ProjectD\ProjectD_Server\ProjectD_Server\ServerPacketHandler.h(111,51): warning C4244: '=': 'uint64'에서 'uint16'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+D:\Unreal\Project\ProjectD\ProjectD_Server\ProjectD_Server\ServerPacketHandler.h(119,59): warning C4244: '=': 'uint64'에서 'uint16'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+D:\Unreal\Project\ProjectD\ProjectD_Server\ServerCore\BufferWriter.h(43,21): warning C4267: '+=': 'size_t'에서 'uint32'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+D:\Unreal\Project\ProjectD\ProjectD_Server\ProjectD_Server\ServerPacketHandler.h(98,13): message : 컴파일되는 함수 템플릿 인스턴스화 'T *BufferWriter::Reserve<PKT_S_TEST>(uint64)'에 대한 참조를 확인하세요.
+          with
+          [
+              T=PKT_S_TEST
+          ]
   ServerPacketHandler.cpp
+D:\Unreal\Project\ProjectD\ProjectD_Server\ProjectD_Server\ServerPacketHandler.h(111,51): warning C4244: '=': 'uint64'에서 'uint16'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+D:\Unreal\Project\ProjectD\ProjectD_Server\ProjectD_Server\ServerPacketHandler.h(119,59): warning C4244: '=': 'uint64'에서 'uint16'(으)로 변환하면서 데이터가 손실될 수 있습니다.
 D:\Unreal\Project\ProjectD\ProjectD_Server\ProjectD_Server\ServerPacketHandler.cpp(17,2): warning C4065: switch문에 'default'가 있으나 'case' 레이블이 없습니다.
+D:\Unreal\Project\ProjectD\ProjectD_Server\ServerCore\BufferWriter.h(43,21): warning C4267: '+=': 'size_t'에서 'uint32'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+D:\Unreal\Project\ProjectD\ProjectD_Server\ProjectD_Server\ServerPacketHandler.h(98,13): message : 컴파일되는 함수 템플릿 인스턴스화 'T *BufferWriter::Reserve<PKT_S_TEST>(uint64)'에 대한 참조를 확인하세요.
+          with
+          [
+              T=PKT_S_TEST
+          ]
   코드를 생성하고 있습니다...
   ProjectD_Server.vcxproj -> D:\Unreal\Project\ProjectD\ProjectD_Server\Binary\Debug\ProjectD_Server.exe
