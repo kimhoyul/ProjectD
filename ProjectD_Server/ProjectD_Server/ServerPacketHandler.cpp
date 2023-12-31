@@ -28,16 +28,20 @@ SendBufferRef ServerPacketHandler::Make_S_TEST(uint64 id, uint32 hp, uint16 atta
 	// id(uint64, 체력(uint32), 공격력(uint16)
 	bw << id << hp << attack;
 
-	// 가변 데이터
-	bw << (uint16)buffs.size();
-	for (BuffData &buff : buffs)
+	struct ListHeader
 	{
-		bw << buff.bufferId << buff.remainTime;
-	}
+		uint16 offset;
+		uint16 count;
+	};
 
-	// 가변 문자열
-	bw << (uint16)name.size();
-	bw.Write((void*)name.data(), name.size() * sizeof(WCHAR));
+	// 가변 데이터
+	ListHeader* buffersHeader = bw.Reserve<ListHeader>();
+
+	buffersHeader->offset = bw.WriteSize();
+	buffersHeader->count = (uint16)buffs.size();
+
+	for (BuffData &buff : buffs)
+		bw << buff.bufferId << buff.remainTime;
 
 	header->size = bw.WriteSize();
 	header->id = S_TEST; // 1 : Test Msg

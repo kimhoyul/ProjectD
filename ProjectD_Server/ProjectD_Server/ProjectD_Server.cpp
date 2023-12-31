@@ -8,8 +8,20 @@
 #include "ServerPacketHandler.h"
 #include <tchar.h>
 
+struct PKT_S_TEST
+{
+	uint32 hp;
+	uint64 id;
+	uint16 attack;
+};
+
 int main()
 {
+	PKT_S_TEST pkt;
+	pkt.hp = 1;
+	pkt.id = 2;
+	pkt.attack = 3;
+
 	ServerServiceRef service = MakeShared<ServerService>(
 		NetAddress(L"127.0.0.1", 7777),
 		MakeShared<IocpCore>(),
