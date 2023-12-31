@@ -47,6 +47,12 @@ struct PKT_S_TEST
 	{
 		uint32 size = 0;
 		size += sizeof(PKT_S_TEST);
+		// [고정 데이터(PKT_S_TEST)][가변데이터(BuffsListItem)(BuffsListItem)(BuffsListItem)]
+		// ^                       ^                                                         
+		// |--------- size --------|
+		if (packetSize < size)
+			return false; 
+
 		size += sizeof(BuffsListItem) * buffsCount;
 		// [고정 데이터(PKT_S_TEST)][가변데이터(BuffsListItem)(BuffsListItem)(BuffsListItem)]
 		// ^                                                                                ^
@@ -62,6 +68,19 @@ struct PKT_S_TEST
 
 		return true;
 	}
+
+	using BuffsList = PacketList<PKT_S_TEST::BuffsListItem>;
+
+	BuffsList GetBuffsList()
+	{
+		// 바이트 포인터로 만들어준후
+		BYTE* data = reinterpret_cast<BYTE*>(this);
+		// 버퍼 오프셋을 더해준다. 
+		// 바이트 포인터는 1바이트씩 이동한다.
+		// 버퍼 오프셋만큼 더해주면 가변 데이터의 시작 위치가 된다.
+		data += buffsOffeset;
+		return BuffsList(reinterpret_cast<PKT_S_TEST::BuffsListItem*>(data), buffsCount);
+	}
 	// 가변 데이터
 	//vector<BuffData> buffs;
 	//wstring name;
@@ -72,37 +91,26 @@ void ClientPacketHandler::Handle_S_TEST(BYTE* buffer, int32 len)
 {
 	BufferReader br(buffer, len);
 
-	// 패킷데이터 보다 작은 경우는 패킷이 아님
-	if (len < sizeof(PKT_S_TEST))
+	PKT_S_TEST* pkt = reinterpret_cast<PKT_S_TEST*>(buffer);
+
+	if (pkt->Validate() == true)
 		return;
 
-	PacketHeader header;
-	br >> header;
+	PKT_S_TEST::BuffsList buffs = pkt->GetBuffsList();
 
-	PKT_S_TEST pkt;
-	br >> pkt;
-
-	if (pkt.Validate() == true)
-		return;
-
-	uint64 id;
-	uint32 hp;
-	uint16 attack;
-	br >> id >> hp >> attack;
-
-	cout << "ID : " << id << " HP : " << hp << " ATT : " << attack << endl;
-
-	vector<PKT_S_TEST::BuffsListItem> buffs;
-	
-	buffs.resize(pkt.buffsCount);
-	for (int32 i = 0; i < pkt.buffsCount; ++i)
-	{
-		br >> buffs[i];
-	}
-
-	cout << "Buff Count : " << pkt.buffsCount << endl;
-	for (int32 i = 0; i < pkt.buffsCount; ++i)
+	cout << "Buff Count : " << buffs.Count() << endl;
+	for (int32 i = 0; i < buffs.Count(); ++i)
 	{
 		cout << "BuffInfo : " << buffs[i].bufferId << " Remain Time : " << buffs[i].remainTime << endl;
+	}
+
+	for (auto it = buffs.begin(); it != buffs.end(); ++it)
+	{
+		cout << "BuffInfo : " << it->bufferId << " Remain Time : " << it->remainTime << endl;
+	}
+
+	for (auto& buff : buffs)
+	{
+		cout << "BuffInfo : " << buff.bufferId << " Remain Time : " << buff.remainTime << endl;
 	}
 }
