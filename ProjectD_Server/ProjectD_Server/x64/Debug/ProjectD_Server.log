@@ -1,5 +1,35 @@
-﻿  ProjectD_Server.cpp
+﻿Struct.proto(4,1): warning G1A4DC0EC: Import Enum.proto is unused.
+Protocol.proto(4,1): warning G1A4DC0EC: Import Enum.proto is unused.
+  D:Enum.pb.h
+  1개 파일이 복사되었습니다.
+  D:Enum.pb.cc
+  1개 파일이 복사되었습니다.
+  D:Struct.pb.h
+  1개 파일이 복사되었습니다.
+  D:Struct.pb.cc
+  1개 파일이 복사되었습니다.
+  D:Protocol.pb.h
+  1개 파일이 복사되었습니다.
+  D:Protocol.pb.cc
+  1개 파일이 복사되었습니다.
+  D:Enum.pb.h
+  1개 파일이 복사되었습니다.
+  D:Enum.pb.cc
+  1개 파일이 복사되었습니다.
+  D:Struct.pb.h
+  1개 파일이 복사되었습니다.
+  D:Struct.pb.cc
+  1개 파일이 복사되었습니다.
+  D:Protocol.pb.h
+  1개 파일이 복사되었습니다.
+  D:Protocol.pb.cc
+  1개 파일이 복사되었습니다.
+  Enum.pb.cc
+  Protocol.pb.cc
+  Struct.pb.cc
+  코드를 생성하고 있습니다...
+  GameSession.cpp
+  ProjectD_Server.cpp
   ServerPacketHandler.cpp
-D:\Unreal\Project\ProjectD\ProjectD_Server\ProjectD_Server\ServerPacketHandler.cpp(17,2): warning C4065: switch문에 'default'가 있으나 'case' 레이블이 없습니다.
   코드를 생성하고 있습니다...
   ProjectD_Server.vcxproj -> D:\Unreal\Project\ProjectD\ProjectD_Server\Binary\Debug\ProjectD_Server.exe
