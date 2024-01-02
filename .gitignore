@@ -30,7 +30,6 @@
 *.lib
 
 # Executables
-*.exe
 *.out
 *.app
 *.ipa
@@ -133,7 +132,6 @@ Package
 *.lib
 
 # Executables
-*.exe
 *.out
 *.app
 *.pdb
@@ -142,3 +140,6 @@ Package
 
 # End of https://www.toptal.com/developers/gitignore/api/c++
 Content.zip
+ProjectD_Server/Binary/Debug/DummyClient.exe
+ProjectD_Server/Binary/Debug/ProjectD_Server.exe
+ProjectD_Server/Binary/Release/ProjectD_Server.exe
