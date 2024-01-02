@@ -143,7 +143,7 @@ Protocol.proto(4,1): warning G1A4DC0EC: Import Enum.proto is unused.
   D:Struct.pb.cc
   1개 파일이 복사되었습니다.
   D:Protocol.pb.h
-  공유 위반입니다.
+  1개 파일이 복사되었습니다.
   D:Protocol.pb.cc
   1개 파일이 복사되었습니다.
   D:ClientPacketHandler.h
