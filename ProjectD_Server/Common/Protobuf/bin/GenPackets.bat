@@ -8,20 +8,21 @@ GenPackets.exe --path=./Protocol.proto --output=ServerPacketHandler --recv=S_ --
 
 IF ERRORLEVEL 1 PAUSE
 
-XCOPY /Y Enum.pb.h "../../../ProjectD_Server"
-XCOPY /Y Enum.pb.cc "../../../ProjectD_Server"
-XCOPY /Y Struct.pb.h "../../../ProjectD_Server"
-XCOPY /Y Struct.pb.cc "../../../ProjectD_Server"
-XCOPY /Y Protocol.pb.h "../../../ProjectD_Server"
-XCOPY /Y Protocol.pb.cc "../../../ProjectD_Server"
-XCOPY /Y ClientPacketHandler.h "../../../ProjectD_Server"
+XCOPY /Y Enum.pb.h "..\..\..\ProjectD_Server"
+XCOPY /Y Enum.pb.cc "..\..\..\ProjectD_Server"
+XCOPY /Y Struct.pb.h "..\..\..\ProjectD_Server"
+XCOPY /Y Struct.pb.cc "..\..\..\ProjectD_Server"
+XCOPY /Y Protocol.pb.h "..\..\..\ProjectD_Server"
+XCOPY /Y Protocol.pb.cc "..\..\..\ProjectD_Server"
+XCOPY /Y ClientPacketHandler.h "..\..\..\ProjectD_Server"
 
-XCOPY /Y Enum.pb.h "../../../DummyClient"
-XCOPY /Y Enum.pb.cc "../../../DummyClient"
-XCOPY /Y Struct.pb.h "../../../DummyClient"
-XCOPY /Y Struct.pb.cc "../../../DummyClient"
-XCOPY /Y Protocol.pb.h "../../../DummyClient"
-XCOPY /Y ServerPacketHandler.h "../../../DummyClient"
+XCOPY /Y Enum.pb.h "..\..\..\DummyClient"
+XCOPY /Y Enum.pb.cc "..\..\..\DummyClient"
+XCOPY /Y Struct.pb.h "..\..\..\DummyClient"
+XCOPY /Y Struct.pb.cc "..\..\..\DummyClient"
+XCOPY /Y Protocol.pb.h "..\..\..\DummyClient"
+XCOPY /Y Protocol.pb.cc "..\..\..\DummyClient"
+XCOPY /Y ServerPacketHandler.h "..\..\..\DummyClient"
 
 DEL /Q /F *.pb.h
 DEL /Q /F *.pb.cc
