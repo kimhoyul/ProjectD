@@ -143,36 +143,35 @@
   		return sendBuffer;
   	}
   };
-  E:Enum.pb.h
+  D:Enum.pb.h
   1개 파일이 복사되었습니다.
-  E:Enum.pb.cc
+  D:Enum.pb.cc
   1개 파일이 복사되었습니다.
-  E:Struct.pb.h
+  D:Struct.pb.h
   1개 파일이 복사되었습니다.
-  E:Struct.pb.cc
+  D:Struct.pb.cc
   1개 파일이 복사되었습니다.
-  E:Protocol.pb.h
+  D:Protocol.pb.h
   1개 파일이 복사되었습니다.
-  E:Protocol.pb.cc
+  D:Protocol.pb.cc
   1개 파일이 복사되었습니다.
-  E:ClientPacketHandler.h
+  D:ClientPacketHandler.h
   1개 파일이 복사되었습니다.
-  E:Enum.pb.h
+  D:Enum.pb.h
   1개 파일이 복사되었습니다.
-  E:Enum.pb.cc
+  D:Enum.pb.cc
   1개 파일이 복사되었습니다.
-  E:Struct.pb.h
+  D:Struct.pb.h
   1개 파일이 복사되었습니다.
-  E:Struct.pb.cc
+  D:Struct.pb.cc
   1개 파일이 복사되었습니다.
-  E:Protocol.pb.h
+  D:Protocol.pb.h
   1개 파일이 복사되었습니다.
-  E:Protocol.pb.cc
+  D:Protocol.pb.cc
   1개 파일이 복사되었습니다.
-  E:ServerPacketHandler.h
+  D:ServerPacketHandler.h
   1개 파일이 복사되었습니다.
   계속하려면 아무 키나 누르십시오 . . . 
-  pch.cpp
   Enum.pb.cc
   Protocol.pb.cc
   Struct.pb.cc
@@ -180,4 +179,4 @@
   DummyClient.cpp
   ServerPacketHandler.cpp
   코드를 생성하고 있습니다...
-  DummyClient.vcxproj -> E:\UE\ProjectD\ProjectD_Server\Binary\Debug\DummyClient.exe
+  DummyClient.vcxproj -> D:\Unreal\Project\ProjectD\ProjectD_Server\Binary\Debug\DummyClient.exe
