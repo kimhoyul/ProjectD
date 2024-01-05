@@ -12,7 +12,7 @@ message C_LOGIN
 message S_LOGIN
 {
 	bool success = 1;
-	repeated Player players = 2; // 아이디 발급 전
+	repeated Player players = 2; // DB에서 가져올 플레이어 정보
 }
 
 message C_ENTER_GAME
