@@ -179,7 +179,6 @@
   코드를 생성하고 있습니다...
   GameSession.cpp
   GameSessionManager.cpp
-  Job.cpp
   Player.cpp
   ProjectD_Server.cpp
   ClientPacketHandler.cpp
