@@ -18,6 +18,7 @@ void JobQueue::Push(JobRef&& job)
 	}
 }
 
+
 void JobQueue::Execute()
 {
 	while (true)
