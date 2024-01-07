@@ -173,11 +173,11 @@
   1개 파일이 복사되었습니다.
   계속하려면 아무 키나 누르십시오 . . . 
   pch.cpp
-  Enum.pb.cc
   Protocol.pb.cc
+  Enum.pb.cc
   Struct.pb.cc
   코드를 생성하고 있습니다...
-  DummyClient.cpp
   ServerPacketHandler.cpp
+  DummyClient.cpp
   코드를 생성하고 있습니다...
   DummyClient.vcxproj -> D:\Unreal\Project\ProjectD\ProjectD_Server\Binary\Debug\DummyClient.exe
