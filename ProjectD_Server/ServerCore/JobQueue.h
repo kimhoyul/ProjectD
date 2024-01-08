@@ -23,9 +23,11 @@ public:
 
 	void ClearJob() { _jobs.Clear(); }
 
+public:
+	void Execute();
+
 private:
 	void Push(JobRef&& job);
-	void Execute();
 
 protected:
 	LockQueue<JobRef> _jobs;

@@ -2,6 +2,8 @@
 #include "ThreadManager.h"
 #include "CoreTLS.h"
 #include "CoreGlobal.h"
+#include "JobQueue.h"
+#include "GlobalQueue.h"
 
 /*-------------------------------------------
 				ThreadManager
@@ -51,6 +53,25 @@ void ThreadManager::InitTLS()
 void ThreadManager::DestroyTLS()
 {
 	
+}
+
+void ThreadManager::DoGlobalQueueWork()
+{
+	while (true)
+	{
+		uint64 now = GetTickCount64();
+		if (now > LEndTickCount)
+			break;
+
+		// Global Queue 에서 작업을 가져온다.
+		JobQueueRef jobQueue = GGlobalQueue->Pop();
+		if (jobQueue == nullptr)
+			break;
+
+		// Global Queue 에서 가져온 작업을 실행한다.
+		jobQueue->Execute();
+
+	}
 }
 
 

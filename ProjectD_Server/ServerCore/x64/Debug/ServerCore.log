@@ -6,6 +6,7 @@
   CorePch.cpp
   CoreTLS.cpp
   DeadLockProfiler.cpp
+  GlobalQueue.cpp
   IocpCore.cpp
   IocpEvent.cpp
   Job.cpp
@@ -18,9 +19,9 @@
   NetAddress.cpp
   RecvBuffer.cpp
   RefCounting.cpp
-  SendBuffer.cpp
   코드를 생성하고 있습니다...
   컴파일하고 있습니다...
+  SendBuffer.cpp
   Service.cpp
   Session.cpp
   SocketUtils.cpp
